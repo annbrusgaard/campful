@@ -460,12 +460,20 @@ const MapView = ({camps,onSelect}) => {
 };
 
 // ── Camp Card ─────────────────────────────────────────────────────────────
-const CampCard = ({camp,highlighted,saved,onAddReview,onToggleSave,onShowAlert}) => {
+const CampCard = ({camp,highlighted,saved,comparing,onAddReview,onToggleSave,onShowAlert,onToggleCompare}) => {
   const [expanded,setExpanded]=useState(highlighted);
   const [showReview,setShowReview]=useState(false);
   const [copied,setCopied]=useState(false);
+  const [showShare,setShowShare]=useState(false);
   const [reviews,setReviews]=useState(camp.reviews||[]);
   const cardRef=useRef(null);
+  const shareRef=useRef(null);
+  useEffect(()=>{
+    if(!showShare) return;
+    const handler=(e)=>{if(shareRef.current&&!shareRef.current.contains(e.target))setShowShare(false);};
+    document.addEventListener("mousedown",handler);
+    return()=>document.removeEventListener("mousedown",handler);
+  },[showShare]);
   const rating=avg(reviews);
   const ts=TYPE_STYLE[camp.type]||{bg:"#EFF8FF",fg:"#1A6FA8",dot:BLUE};
   useEffect(()=>{if(highlighted&&cardRef.current)cardRef.current.scrollIntoView({behavior:"smooth",block:"center"});},[highlighted]);
@@ -483,9 +491,7 @@ const CampCard = ({camp,highlighted,saved,onAddReview,onToggleSave,onShowAlert})
               <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
                 <span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:ts.bg,color:ts.fg,fontFamily:"'DM Sans',sans-serif"}}>{camp.type}</span>
                 {camp.featured&&<span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:"#FFF3CD",color:"#92400E",fontFamily:"'DM Sans',sans-serif"}}>⭐ Popular</span>}
-                {camp.registrationOpen
-                  ?<span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:"#D1FAE5",color:"#065F46",fontFamily:"'DM Sans',sans-serif"}}>🟢 Open</span>
-                  :<span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:"#FEF3C7",color:"#92400E",fontFamily:"'DM Sans',sans-serif"}}>⏳ Coming Soon</span>}
+
                 {camp.extCare&&<span style={{fontSize:11,fontWeight:600,padding:"3px 10px",borderRadius:20,background:BLUE_LIGHT,color:BLUE_DARK,fontFamily:"'DM Sans',sans-serif"}}>🕐 Ext. Care</span>}
               </div>
               <h3 style={{margin:0,fontSize:17,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08",lineHeight:1.25}}>{camp.name}</h3>
@@ -516,9 +522,28 @@ const CampCard = ({camp,highlighted,saved,onAddReview,onToggleSave,onShowAlert})
             <button onClick={()=>onToggleSave(camp)} style={{padding:"9px 10px",borderRadius:10,border:`1.5px solid #E8D5A0`,fontSize:14,cursor:"pointer",background:saved?BLUE_LIGHT:"white",flexShrink:0,transition:"all 0.15s"}} title={saved?"Remove from schedule":"Save to schedule"}>
               {saved?"🔖":"🏷️"}
             </button>
-            <button onClick={copyLink} style={{...S.btn(false),padding:"9px 10px",borderRadius:10,fontSize:12,flexShrink:0}} title="Copy link">
-              {copied?"✓":"🔗"}
+            <button onClick={()=>onToggleCompare(camp)} style={{padding:"9px 10px",borderRadius:10,border:`1.5px solid #E8D5A0`,fontSize:13,cursor:"pointer",background:comparing?BLUE_LIGHT:"white",flexShrink:0,transition:"all 0.15s",fontWeight:700,color:comparing?BLUE_DARK:"#92600A"}} title={comparing?"Remove from compare":"Compare this camp"}>
+              ⚖️
             </button>
+            <div style={{position:"relative",flexShrink:0}} ref={shareRef}>
+              <button onClick={()=>setShowShare(!showShare)} style={{...S.btn(false),padding:"9px 10px",borderRadius:10,fontSize:13}} title="Share">
+                📤
+              </button>
+              {showShare&&(
+                <div style={{position:"absolute",right:0,top:"calc(100% + 6px)",background:"white",borderRadius:12,boxShadow:"0 8px 24px rgba(146,64,14,0.15)",border:`1.5px solid #E8D5A0`,zIndex:50,minWidth:180,overflow:"hidden"}}>
+                  {[
+                    ["🔗 Copy link", ()=>{navigator.clipboard.writeText(getCampUrl(camp.id));setCopied(true);setTimeout(()=>{setCopied(false);setShowShare(false);},1500);}],
+                    ["💬 Share via Text", ()=>{window.open(`sms:?body=Check out ${camp.name} on Campful! ${getCampUrl(camp.id)}`);setShowShare(false);}],
+                    ["📱 Share on WhatsApp", ()=>{window.open(`https://wa.me/?text=Check out ${encodeURIComponent(camp.name)} on Campful! ${encodeURIComponent(getCampUrl(camp.id))}`);setShowShare(false);}],
+                  ].map(([label,action])=>(
+                    <button key={label} onClick={action} style={{display:"block",width:"100%",padding:"10px 14px",border:"none",background:"transparent",textAlign:"left",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",color:"#2D1A08",borderBottom:`1px solid #F5EFE0`}}>
+                      {label}
+                    </button>
+                  ))}
+                  {copied&&<div style={{padding:"8px 14px",fontSize:12,color:"#059669",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>✓ Link copied!</div>}
+                </div>
+              )}
+            </div>
           </div>
           {saved&&<p style={{margin:"8px 0 0",fontSize:11,color:BLUE,fontFamily:"'DM Sans',sans-serif",fontWeight:700}}>🔖 Saved to your schedule</p>}
         </div>
@@ -567,6 +592,164 @@ const CampCard = ({camp,highlighted,saved,onAddReview,onToggleSave,onShowAlert})
   );
 };
 
+
+// ── Compare Modal ─────────────────────────────────────────────────────────
+const CompareModal = ({camps, allCamps, onToggle, onClose}) => {
+  const ROWS = [
+    ["Type",       c=>c.type],
+    ["Ages",       c=>c.ages?`Ages ${c.ages}`:"—"],
+    ["Cost",       c=>c.cost||"See website"],
+    ["Schedule",   c=>c.schedule||"—"],
+    ["Dates",      c=>c.dates||"—"],
+    ["Location",   c=>c.address||"—"],
+    ["Ext. Care",  c=>c.extCare?"✅ Yes":"❌ No"],
+    ["Before Care",c=>c.beforeCare?"✅ Yes":"❌ No"],
+    ["After Care", c=>c.afterCare?"✅ Yes":"❌ No"],
+    ["Rating",     c=>{const r=c.reviews?.length?( c.reviews.reduce((s,x)=>s+x.rating,0)/c.reviews.length).toFixed(1):null; return r?`⭐ ${r} (${c.reviews.length} reviews)`:"No reviews yet";}],
+    ["Website",    c=>c.web?<a href={c.web} target="_blank" rel="noopener noreferrer" style={{color:BLUE,fontWeight:600,fontSize:12}}>Visit →</a>:"—"],
+  ];
+  const [search,setSearch]=useState("");
+  const suggestions=allCamps.filter(c=>!camps.find(x=>x.id===c.id)&&(c.name.toLowerCase().includes(search.toLowerCase())||c.type.toLowerCase().includes(search.toLowerCase()))).slice(0,5);
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(92,40,8,0.65)",display:"flex",alignItems:"flex-start",justifyContent:"center",zIndex:200,padding:16,overflowY:"auto",backdropFilter:"blur(6px)"}}>
+      <div style={{background:"white",borderRadius:20,width:"100%",maxWidth:860,boxShadow:"0 30px 80px rgba(92,40,8,0.25)",margin:"auto",overflow:"hidden"}}>
+        <div style={{background:`linear-gradient(135deg,#92400E,#F59E0B)`,padding:"20px 24px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <h2 style={{margin:0,fontSize:22,fontWeight:900,fontFamily:"'Fraunces',serif",color:"white"}}>Compare Camps</h2>
+            <p style={{margin:"3px 0 0",fontSize:12,color:"rgba(255,255,255,0.8)",fontFamily:"'DM Sans',sans-serif"}}>Up to 3 camps side by side</p>
+          </div>
+          <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:10,padding:"6px 14px",cursor:"pointer",fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>✕ Close</button>
+        </div>
+        <div style={{padding:20}}>
+          {/* Add camp search */}
+          {camps.length<3&&(
+            <div style={{marginBottom:16,position:"relative"}}>
+              <label style={{display:"block",fontSize:10,fontWeight:700,color:"#92600A",marginBottom:5,letterSpacing:"0.06em",fontFamily:"'DM Sans',sans-serif"}}>ADD A CAMP TO COMPARE</label>
+              <input style={{...S.input,maxWidth:360}} placeholder="Search by name or type…" value={search} onChange={e=>setSearch(e.target.value)}/>
+              {search&&suggestions.length>0&&(
+                <div style={{position:"absolute",top:"100%",left:0,right:0,maxWidth:360,background:"white",border:`1.5px solid #E8D5A0`,borderRadius:10,boxShadow:"0 8px 20px rgba(146,64,14,0.12)",zIndex:10,marginTop:4}}>
+                  {suggestions.map(c=>(
+                    <button key={c.id} onClick={()=>{onToggle(c);setSearch("");}} style={{display:"block",width:"100%",padding:"10px 14px",border:"none",background:"transparent",textAlign:"left",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",borderBottom:`1px solid #F5EFE0`}}>
+                      <span style={{fontWeight:700,fontSize:13,color:"#2D1A08"}}>{c.name}</span>
+                      <span style={{fontSize:11,color:"#92600A",marginLeft:8}}>{c.type} · {c.cost}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {camps.length===0?(
+            <div style={{textAlign:"center",padding:"40px 0",color:"#92600A"}}>
+              <div style={{fontSize:40,marginBottom:10}}>🌵</div>
+              <p style={{fontFamily:"'Fraunces',serif",fontSize:16,fontWeight:700,color:"#2D1A08",margin:"0 0 6px"}}>No camps selected yet</p>
+              <p style={{fontSize:13,fontFamily:"'DM Sans',sans-serif",margin:0}}>Use the search above or hit ⚖️ on any camp card</p>
+            </div>
+          ):(
+            <div style={{overflowX:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",minWidth:400}}>
+                <thead>
+                  <tr>
+                    <th style={{width:110,padding:"8px 10px",textAlign:"left",fontSize:11,fontWeight:700,color:"#92600A",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.05em",borderBottom:`2px solid #E8D5A0`}}></th>
+                    {camps.map(c=>{
+                      const ts=TYPE_STYLE[c.type]||{};
+                      return (
+                        <th key={c.id} style={{padding:"8px 10px",textAlign:"left",borderBottom:`2px solid #E8D5A0`,minWidth:180}}>
+                          <div style={{fontSize:13,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08",marginBottom:3}}>{c.name}</div>
+                          <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                            <span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:10,background:ts.bg,color:ts.fg,fontFamily:"'DM Sans',sans-serif"}}>{c.type}</span>
+                            <button onClick={()=>onToggle(c)} style={{fontSize:10,padding:"2px 8px",borderRadius:10,border:"none",background:"#FFE4E6",color:"#9F1239",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Remove</button>
+                          </div>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {ROWS.map(([label,fn],i)=>(
+                    <tr key={label} style={{background:i%2===0?"#FFFBF0":"white"}}>
+                      <td style={{padding:"9px 10px",fontSize:11,fontWeight:700,color:"#92600A",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.04em",verticalAlign:"top"}}>{label}</td>
+                      {camps.map(c=>(
+                        <td key={c.id} style={{padding:"9px 10px",fontSize:13,color:"#2D1A08",fontFamily:"'DM Sans',sans-serif",verticalAlign:"top",borderLeft:`1px solid #F5EFE0`}}>{fn(c)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── About / FAQ Modal ─────────────────────────────────────────────────────
+const AboutModal = ({onClose}) => {
+  const faqs = [
+    ["Is Campful free to use?","Yes, completely free! Campful is a community tool built by Phoenix parents, for Phoenix parents. No ads, no paywalls."],
+    ["How do I find camps near me?","Use the ZIP CODE filter in the search bar — type your zip, hit Go, then pick a radius (5, 10, 15, or 25 miles). The map view also shows exactly where each camp is located."],
+    ["How do I save camps to compare?","Hit the 🏷️ bookmark icon on any camp card to save it to your schedule. Then click ⚖️ to add it to the compare view."],
+    ["Can I add a camp that's missing?","Absolutely! Hit the '+ Add a Camp' button in the header. Your submission goes straight into the list for the community."],
+    ["How does the AI search work?","The ✨ AI search bar uses real-time web search to find Phoenix camps matching your description — try things like 'outdoor camp with extended care under $200' or 'STEM for a curious 9 year old'."],
+    ["How do I export camps to my calendar?","Open any camp's Details and click '📅 Export to Calendar'. It downloads an .ics file that works with Google Calendar, Apple Calendar, and Outlook."],
+    ["Are the reviews from real parents?","Yes! Reviews are submitted by Campful users. We don't verify them but they're from real families in the Phoenix area."],
+    ["How do I get registration alerts?","Click the 🔔 bell icon on any camp card. If registration is open, it'll link you straight to the camp website. If not, it helps you send the camp an email asking to be notified."],
+    ["Who built Campful?","Campful was built by an Arizona parent who was tired of spending hours Googling summer camps. It's a labor of love for the Phoenix parent community. 🌵"],
+    ["How can I help improve it?","Use the '+ Add a Camp' button to add missing camps, leave reviews for camps your kids have attended, and spread the word to other Phoenix parents!"],
+  ];
+  const [open,setOpen]=useState(null);
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(92,40,8,0.65)",display:"flex",alignItems:"flex-start",justifyContent:"center",zIndex:200,padding:16,overflowY:"auto",backdropFilter:"blur(6px)"}}>
+      <div style={{background:"white",borderRadius:20,width:"100%",maxWidth:620,boxShadow:"0 30px 80px rgba(92,40,8,0.25)",margin:"auto",overflow:"hidden"}}>
+        <div style={{background:`linear-gradient(135deg,#92400E,#F59E0B)`,padding:"24px 28px",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-40,right:-40,width:160,height:160,borderRadius:"50%",background:"rgba(255,255,255,0.06)"}}/>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",position:"relative"}}>
+            <div>
+              <h2 style={{margin:"0 0 6px",fontSize:28,fontWeight:900,fontFamily:"'Fraunces',serif",color:"white"}}>About Campful 🌵</h2>
+              <p style={{margin:0,fontSize:13,color:"rgba(255,255,255,0.85)",fontFamily:"'DM Sans',sans-serif",maxWidth:400,lineHeight:1.6}}>
+                A free community tool built by Phoenix parents to make finding the perfect summer camp actually easy.
+              </p>
+            </div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:10,padding:"6px 14px",cursor:"pointer",fontSize:13,fontFamily:"'DM Sans',sans-serif",flexShrink:0,marginLeft:12}}>✕ Close</button>
+          </div>
+          <div style={{display:"flex",gap:12,marginTop:16,flexWrap:"wrap"}}>
+            {[["🏕️","55+ Camps listed"],["🌵","Phoenix & surrounds"],["💛","100% free, always"]].map(([e,l])=>(
+              <div key={l} style={{background:"rgba(255,255,255,0.15)",borderRadius:10,padding:"7px 14px",display:"flex",alignItems:"center",gap:7}}>
+                <span style={{fontSize:16}}>{e}</span>
+                <span style={{fontSize:12,fontWeight:700,color:"white",fontFamily:"'DM Sans',sans-serif"}}>{l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{padding:24}}>
+          <h3 style={{margin:"0 0 14px",fontSize:17,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Frequently Asked Questions</h3>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {faqs.map(([q,a],i)=>(
+              <div key={i} style={{borderRadius:12,border:`1.5px solid ${open===i?"#E8D5A0":"#F0E8D8"}`,overflow:"hidden",transition:"all 0.15s"}}>
+                <button onClick={()=>setOpen(open===i?null:i)} style={{width:"100%",padding:"13px 16px",border:"none",background:open===i?"#FFFBF0":"white",textAlign:"left",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+                  <span style={{fontSize:13,fontWeight:700,color:"#2D1A08",fontFamily:"'DM Sans',sans-serif",lineHeight:1.4}}>{q}</span>
+                  <span style={{fontSize:14,color:"#D97706",flexShrink:0,transition:"transform 0.15s",transform:open===i?"rotate(180deg)":"none"}}>▼</span>
+                </button>
+                {open===i&&(
+                  <div style={{padding:"0 16px 14px",fontSize:13,color:"#4A3520",fontFamily:"'DM Sans',sans-serif",lineHeight:1.6,background:"#FFFBF0"}}>
+                    {a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:20,padding:16,background:"#FEF3C7",borderRadius:12,border:`1.5px solid #FDE68A`,textAlign:"center"}}>
+            <p style={{margin:"0 0 4px",fontSize:14,fontWeight:700,fontFamily:"'Fraunces',serif",color:"#92400E"}}>Know a camp that's missing?</p>
+            <p style={{margin:0,fontSize:12,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>Hit the + Add a Camp button and help the Phoenix parent community! 🌵</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Main App ──────────────────────────────────────────────────────────────
 export default function Campful() {
   const [camps,setCamps]=useState(CAMPS);
@@ -581,6 +764,9 @@ export default function Campful() {
   const [isSearching,setIsSearching]=useState(false);
   const [showAdd,setShowAdd]=useState(false);
   const [showSchedule,setShowSchedule]=useState(false);
+  const [showCompare,setShowCompare]=useState(false);
+  const [showAbout,setShowAbout]=useState(false);
+  const [compareIds,setCompareIds]=useState(new Set());
   const [alertCamp,setAlertCamp]=useState(null);
   const [savedIds,setSavedIds]=useState(new Set());
   const [highlighted,setHighlighted]=useState(getHighlightedId());
@@ -604,6 +790,8 @@ export default function Campful() {
 
   const savedCamps=camps.filter(c=>savedIds.has(c.id));
   const toggleSave=camp=>setSavedIds(prev=>{const n=new Set(prev);n.has(camp.id)?n.delete(camp.id):n.add(camp.id);return n;});
+  const toggleCompare=camp=>setCompareIds(prev=>{const n=new Set(prev);if(n.has(camp.id)){n.delete(camp.id);}else if(n.size<3){n.add(camp.id);}else{alert("You can compare up to 3 camps at a time.");}return n;});
+  const compareCamps=camps.filter(c=>compareIds.has(c.id));
 
   const lookupZip=async()=>{
     if(!zipCode.trim()||zipCode.length<5){alert("Please enter a valid 5-digit zip code.");return;}
@@ -760,7 +948,7 @@ export default function Campful() {
           <MapView camps={filtered} onSelect={id=>{setView("list");setHighlighted(id);}}/>
         ):filtered.length>0?(
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:14}}>
-            {filtered.map(c=><CampCard key={c.id} camp={c} highlighted={highlighted===c.id} saved={savedIds.has(c.id)} onAddReview={handleAddReview} onToggleSave={toggleSave} onShowAlert={setAlertCamp}/>)}
+            {filtered.map(c=><CampCard key={c.id} camp={c} highlighted={highlighted===c.id} saved={savedIds.has(c.id)} comparing={compareIds.has(c.id)} onAddReview={handleAddReview} onToggleSave={toggleSave} onShowAlert={setAlertCamp} onToggleCompare={toggleCompare}/>)}
           </div>
         ):(
           <div style={{textAlign:"center",padding:"60px 0",color:"#A07040"}}>
@@ -779,6 +967,8 @@ export default function Campful() {
       {showSchedule&&<ScheduleBuilder savedCamps={savedCamps} onToggleSave={toggleSave} onClose={()=>setShowSchedule(false)}/>}
       {showAdd&&<AddCampModal onClose={()=>setShowAdd(false)} onAdd={c=>setCamps(prev=>[c,...prev])}/>}
       {alertCamp&&<AlertModal camp={alertCamp} onClose={()=>setAlertCamp(null)}/>}
+      {showCompare&&<CompareModal camps={compareCamps} allCamps={camps} onToggle={toggleCompare} onClose={()=>setShowCompare(false)}/>}
+      {showAbout&&<AboutModal onClose={()=>setShowAbout(false)}/>}
     </div>
   );
 }
