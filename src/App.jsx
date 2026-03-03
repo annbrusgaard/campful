@@ -704,7 +704,7 @@ const FeedbackModal = ({onClose}) => {
   const [sent,setSent]=useState(false);
   const send=()=>{
     if(!msg.trim()) return;
-    window.open("mailto:hello@campfulphx.com?subject=Campful Feedback&body="+encodeURIComponent(msg));
+    window.open("mailto:annbrusgaard@gmail.com?subject=Campful Feedback&body="+encodeURIComponent(msg));
     setSent(true);
   };
   return (
