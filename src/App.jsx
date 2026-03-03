@@ -523,7 +523,8 @@ const CampCard = ({camp,highlighted,saved,comparing,onAddReview,onToggleSave,onS
             <button onClick={()=>{const url=getCampUrl(camp.id);if(navigator.share){navigator.share({title:camp.name,text:"Check out "+camp.name+" on Campful!",url});}else{navigator.clipboard.writeText(url).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);}).catch(()=>{prompt("Copy this link:",url);});}}} style={{...S.btn(false),padding:"9px 10px",borderRadius:10,fontSize:13,flexShrink:0}}>
                 {copied?"✓":"📤"}
               </button>
-                        {saved&&<p style={{margin:"8px 0 0",fontSize:11,color:BLUE,fontFamily:"'DM Sans',sans-serif",fontWeight:700}}>🔖 Saved to your schedule</p>}
+          </div>
+          {saved&&<p style={{margin:"8px 0 0",fontSize:11,color:BLUE,fontFamily:"'DM Sans',sans-serif",fontWeight:700}}>🔖 Saved to your schedule</p>}
         </div>
         {expanded&&(
           <div style={{borderTop:`1.5px solid #E8D5A0`,padding:20,background:SKY}}>
