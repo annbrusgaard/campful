@@ -282,7 +282,7 @@ const ScheduleBuilder = ({savedCamps, allCamps, onToggleSave, onClose}) => {
                   );
                 })}
               </div>
-              <div style={{display:"flex",gap:10}}>
+              <div style={{display:"flex",gap:10"}}>
                 <button onClick={()=>exportAllToICal(savedCamps)} style={{...S.btn(true),flex:1,padding:"12px 0",borderRadius:12,fontSize:13}}>
                   📅 Export All to Calendar
                 </button>
