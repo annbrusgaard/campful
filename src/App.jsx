@@ -30,17 +30,17 @@ const TYPE_STYLE = {
 
 const CAMPS = [
   // ── STEM ──────────────────────────────────────────────────────────────
-  {id:1,name:"Arizona Science Center Camp",org:"Arizona Science Center",type:"STEM",ages:"5-14",cost:"$250/wk",costNum:250,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"600 E Washington St, Phoenix, AZ 85004",lat:33.4484,lng:-112.0669,desc:"Hands-on STEM camps with themed weeks including robotics, chemistry, and space exploration. All skill levels welcome.",schedule:"Mon–Fri, 9am–3pm",web:"https://azscience.org",phone:"(602) 716-2000",extras:"Scholarships available. Members save $50/wk.",extCare:true,beforeCare:true,afterCare:true,featured:true,registrationOpen:true,reviews:[{name:"Jennifer M.",rating:5,text:"My daughter loved the robotics week — instructors were incredible!",childAge:"10",date:"Aug 2024"},{name:"Tom K.",rating:4,text:"Great curriculum, worth every penny.",childAge:"8",date:"Jul 2024"}]},
-  {id:2,name:"Code Ninjas Summer Camp",org:"Code Ninjas",type:"STEM",ages:"7-14",cost:"$350/wk",costNum:350,dates:"June 9 – Aug 8",startDate:"2025-06-09",endDate:"2025-08-08",address:"3902 E Thomas Rd, Phoenix, AZ 85018",lat:33.4794,lng:-111.9990,desc:"Kids build their own video games using Scratch, JavaScript, and Roblox Studio in a fun ninja-themed environment.",schedule:"Mon–Fri, 9am–3pm",web:"https://codeninjas.com",phone:"(602) 429-0011",extras:"All skill levels. Multiple Valley locations.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[{name:"Ashley T.",rating:5,text:"My son built his own game in one week. He talks about it constantly!",childAge:"9",date:"Jun 2024"}]},
+  {id:1,name:"Arizona Science Center Camp",org:"Arizona Science Center",type:"STEM",ages:"5-14",cost:"$250/wk",costNum:250,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"600 E Washington St, Phoenix, AZ 85004",lat:33.4484,lng:-112.0669,desc:"Hands-on STEM camps with themed weeks including robotics, chemistry, and space exploration. All skill levels welcome.",schedule:"Mon–Fri, 9am–3pm",web:"https://azscience.org",phone:"(602) 716-2000",extras:"Scholarships available. Members save $50/wk.",extCare:true,beforeCare:true,afterCare:true,featured:true,registrationOpen:true,reviews:[]},
+  {id:2,name:"Code Ninjas Summer Camp",org:"Code Ninjas",type:"STEM",ages:"7-14",cost:"$350/wk",costNum:350,dates:"June 9 – Aug 8",startDate:"2025-06-09",endDate:"2025-08-08",address:"3902 E Thomas Rd, Phoenix, AZ 85018",lat:33.4794,lng:-111.9990,desc:"Kids build their own video games using Scratch, JavaScript, and Roblox Studio in a fun ninja-themed environment.",schedule:"Mon–Fri, 9am–3pm",web:"https://codeninjas.com",phone:"(602) 429-0011",extras:"All skill levels. Multiple Valley locations.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
   {id:3,name:"iCode Summer Camp",org:"iCode School",type:"STEM",ages:"6-18",cost:"$399/wk",costNum:399,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"8465 E Hartford Dr, Scottsdale, AZ 85255",lat:33.6512,lng:-111.9000,desc:"Coding, drones, game design, AI, 3D printing, and filmmaking camps for every level. Gamified learning that keeps kids engaged.",schedule:"Mon–Fri, 9am–3pm",web:"https://icodeschool.com",phone:"(480) 809-9429",extras:"ESA approved. Scottsdale, Chandler & Peoria locations.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
   {id:4,name:"Engineering For Kids Camp",org:"Engineering For Kids Phoenix Metro",type:"STEM",ages:"4-14",cost:"$299/wk",costNum:299,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Multiple Phoenix Metro locations",lat:33.5200,lng:-111.9800,desc:"Kids design, build, test and improve real engineering projects while developing teamwork skills. Inspiring future makers and creators.",schedule:"Mon–Fri, 9am–3pm",web:"https://engineeringforkids.com/phoenix-metro",phone:"(602) 888-0349",extras:"Multiple locations across the Valley.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
   {id:5,name:"Mad Science Summer Camp",org:"Mad Science of Arizona",type:"STEM",ages:"5-12",cost:"$275/wk",costNum:275,dates:"June 3 – July 18",startDate:"2025-06-03",endDate:"2025-07-18",address:"Multiple Maricopa County locations",lat:33.4800,lng:-112.0700,desc:"Campers become detectives, engineers and scientists through weekly themed experiments. Owl pellet dissections, bridges, crime scenes and more.",schedule:"Mon–Fri, 9am–12pm or 1pm–4pm",web:"https://madscience.org/arizona",extras:"Different subject every week. Various Valley locations.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
   {id:6,name:"Ninja Nation Camp",org:"Ninja Nation",type:"Sports",ages:"5-12",cost:"$299/wk",costNum:299,dates:"May 26 – Aug 1",startDate:"2025-05-26",endDate:"2025-08-01",address:"15449 N Hayden Rd, Scottsdale, AZ 85260",lat:33.6300,lng:-111.9100,desc:"Full-day ninja obstacle course camp with classes, open gym time, team building and competitions. The ultimate day of fun and fitness.",schedule:"Mon–Fri, 8:30am–3:30pm",web:"https://ninjanationcamp.com",extras:"Glendale location also available.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
 
   // ── OUTDOOR / NATURE ──────────────────────────────────────────────────
-  {id:7,name:"Phoenix Parks Summer Camp",org:"City of Phoenix Parks & Recreation",type:"Outdoor",ages:"6-13",cost:"$60/wk",costNum:60,dates:"June 9 – July 25",startDate:"2025-06-09",endDate:"2025-07-25",address:"Multiple Phoenix Park locations",lat:33.4651,lng:-112.0794,desc:"Affordable city-run camps with outdoor activities, sports, arts & crafts, and field trips throughout Phoenix neighborhoods.",schedule:"Mon–Fri, 7:30am–5:30pm",web:"https://phoenix.gov/parks",phone:"(602) 262-6861",extras:"Financial assistance available. Most affordable option in Phoenix.",extCare:true,beforeCare:true,afterCare:true,featured:true,registrationOpen:true,reviews:[{name:"Maria L.",rating:5,text:"Best value in Phoenix! My kids went 3 summers in a row.",childAge:"7",date:"Aug 2024"}]},
-  {id:8,name:"YMCA Summer Day Camp",org:"Valley of the Sun YMCA",type:"Outdoor",ages:"5-15",cost:"$175/wk",costNum:175,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Multiple YMCA locations across the Valley",lat:33.5092,lng:-112.1268,desc:"Classic summer camp with swimming, sports, field trips, and character-building activities. 31 locations across the Valley.",schedule:"Mon–Fri, 7am–6pm",web:"https://valleyofthesunymca.org",phone:"(602) 264-9011",extras:"Swim lessons included. Financial assistance available.",extCare:true,beforeCare:true,afterCare:true,featured:true,registrationOpen:true,reviews:[{name:"Christine W.",rating:4,text:"Reliable, safe, and affordable. My kids have gone 3 years and love it.",childAge:"6",date:"Jul 2024"}]},
-  {id:9,name:"Camp Zoo",org:"Phoenix Zoo",type:"Outdoor",ages:"5-13",cost:"$350/wk",costNum:350,dates:"June 2 – July 28",startDate:"2025-06-02",endDate:"2025-07-28",address:"455 N Galvin Pkwy, Phoenix, AZ 85008",lat:33.4494,lng:-111.9468,desc:"Animal encounters, games, science experiments and conservation activities straight from Phoenix Zoo specialists. Nothing quite like it!",schedule:"Mon–Fri, 8am–3pm",web:"https://phoenixzoo.org/camps",phone:"(602) 914-4333",extras:"Limited spots — register early. Behind-the-scenes animal access.",extCare:false,beforeCare:false,afterCare:false,featured:true,registrationOpen:true,reviews:[{name:"Lisa B.",rating:5,text:"My son came home every day buzzing about the animals. Absolutely worth it.",childAge:"8",date:"Jul 2024"}]},
+  {id:7,name:"Phoenix Parks Summer Camp",org:"City of Phoenix Parks & Recreation",type:"Outdoor",ages:"6-13",cost:"$60/wk",costNum:60,dates:"June 9 – July 25",startDate:"2025-06-09",endDate:"2025-07-25",address:"Multiple Phoenix Park locations",lat:33.4651,lng:-112.0794,desc:"Affordable city-run camps with outdoor activities, sports, arts & crafts, and field trips throughout Phoenix neighborhoods.",schedule:"Mon–Fri, 7:30am–5:30pm",web:"https://phoenix.gov/parks",phone:"(602) 262-6861",extras:"Financial assistance available. Most affordable option in Phoenix.",extCare:true,beforeCare:true,afterCare:true,featured:true,registrationOpen:true,reviews:[]},
+  {id:8,name:"YMCA Summer Day Camp",org:"Valley of the Sun YMCA",type:"Outdoor",ages:"5-15",cost:"$175/wk",costNum:175,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Multiple YMCA locations across the Valley",lat:33.5092,lng:-112.1268,desc:"Classic summer camp with swimming, sports, field trips, and character-building activities. 31 locations across the Valley.",schedule:"Mon–Fri, 7am–6pm",web:"https://valleyofthesunymca.org",phone:"(602) 264-9011",extras:"Swim lessons included. Financial assistance available.",extCare:true,beforeCare:true,afterCare:true,featured:true,registrationOpen:true,reviews:[]},
+  {id:9,name:"Camp Zoo",org:"Phoenix Zoo",type:"Outdoor",ages:"5-13",cost:"$350/wk",costNum:350,dates:"June 2 – July 28",startDate:"2025-06-02",endDate:"2025-07-28",address:"455 N Galvin Pkwy, Phoenix, AZ 85008",lat:33.4494,lng:-111.9468,desc:"Animal encounters, games, science experiments and conservation activities straight from Phoenix Zoo specialists. Nothing quite like it!",schedule:"Mon–Fri, 8am–3pm",web:"https://phoenixzoo.org/camps",phone:"(602) 914-4333",extras:"Limited spots — register early. Behind-the-scenes animal access.",extCare:false,beforeCare:false,afterCare:false,featured:true,registrationOpen:true,reviews:[]},
   {id:10,name:"Desert Botanical Garden Discovery Camp",org:"Desert Botanical Garden",type:"Outdoor",ages:"6-12",cost:"$310/wk",costNum:310,dates:"June 2 – July 18",startDate:"2025-06-02",endDate:"2025-07-18",address:"1201 N Galvin Pkwy, Phoenix, AZ 85008",lat:33.4614,lng:-111.9446,desc:"Explore the beauty of the Sonoran Desert through outdoor skills, nature-inspired art, sustainability, and science. Garden trail exploration daily.",schedule:"Mon–Fri, 8am–12pm",web:"https://dbg.org",phone:"(480) 941-1225",extras:"All activities included with camp fee.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
   {id:11,name:"Cactus Day Camp",org:"Cactus Day Camp",type:"Outdoor",ages:"4-13",cost:"$425/wk",costNum:425,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Cave Creek area, Phoenix Metro",lat:33.8300,lng:-112.0000,desc:"ACA-accredited traditional day camp inspiring active, unplugged lifestyles in the beautiful Arizona desert. Strong friendships and confident kids.",schedule:"Mon–Fri, 7am–5:30pm",web:"https://cactusdaycamp.com",extras:"American Camp Association accredited. Sibling discounts available.",extCare:true,beforeCare:true,afterCare:true,featured:true,registrationOpen:true,reviews:[]},
   {id:12,name:"Camp Colley Outdoor Adventure",org:"City of Phoenix Parks",type:"Outdoor",ages:"7-17",cost:"$500/wk",costNum:500,dates:"June 9 – July 25",startDate:"2025-06-09",endDate:"2025-07-25",address:"Happy Jack, AZ (Mogollon Rim)",lat:34.2800,lng:-111.3200,desc:"30-acre outdoor adventure camp on the Mogollon Rim. Nature education, hiking, leadership skills, and lifelong friendships away from the Phoenix heat.",schedule:"Mon–Fri, overnight sessions",web:"https://phoenix.gov/parks",extras:"Teen Leadership CIT program ages 16-17. Inclusive for neurodiverse youth.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
@@ -48,7 +48,7 @@ const CAMPS = [
   {id:14,name:"Camps for Kids AZ",org:"Camps for Kids",type:"Outdoor",ages:"5-17",cost:"$399/wk",costNum:399,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Multiple Valley locations",lat:33.5500,lng:-112.1000,desc:"Arizona's most active themed camps — Animal, Water, LEGO, Cosmic Glow, and Gaming camps. Overnight options also available for ages 7-17.",schedule:"Mon–Fri, 7am–6pm",web:"https://summercampaz.com",extras:"Day and overnight options. Wildly popular — book early!",extCare:true,beforeCare:true,afterCare:true,featured:false,registrationOpen:true,reviews:[]},
 
   // ── ARTS ──────────────────────────────────────────────────────────────
-  {id:15,name:"Children's Museum of Phoenix Camp",org:"Children's Museum of Phoenix",type:"Arts",ages:"5-8",cost:"$345/wk",costNum:345,dates:"May 26 – July 31",startDate:"2025-05-26",endDate:"2025-07-31",address:"215 N 7th St, Phoenix, AZ 85034",lat:33.4530,lng:-112.0600,desc:"Award-winning themed weekly camps covering nature, science, teamwork, and creativity. Explore three floors of imaginative exhibits.",schedule:"Mon–Fri, 9am–3pm",web:"https://childrensmuseumofphoenix.org",phone:"(602) 253-0501",extras:"Extended care $100/wk. Member discount available. Scholarships offered.",extCare:true,beforeCare:false,afterCare:true,featured:true,registrationOpen:true,reviews:[{name:"Sarah K.",rating:5,text:"The themed weeks are so creative. My daughter was excited every single day.",childAge:"6",date:"Jul 2024"}]},
+  {id:15,name:"Children's Museum of Phoenix Camp",org:"Children's Museum of Phoenix",type:"Arts",ages:"5-8",cost:"$345/wk",costNum:345,dates:"May 26 – July 31",startDate:"2025-05-26",endDate:"2025-07-31",address:"215 N 7th St, Phoenix, AZ 85034",lat:33.4530,lng:-112.0600,desc:"Award-winning themed weekly camps covering nature, science, teamwork, and creativity. Explore three floors of imaginative exhibits.",schedule:"Mon–Fri, 9am–3pm",web:"https://childrensmuseumofphoenix.org",phone:"(602) 253-0501",extras:"Extended care $100/wk. Member discount available. Scholarships offered.",extCare:true,beforeCare:false,afterCare:true,featured:true,registrationOpen:true,reviews:[]},
   {id:16,name:"Phoenix Youth Circus Arts Camp",org:"Phoenix Youth Circus",type:"Arts",ages:"7-16",cost:"$350/wk",costNum:350,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"330 N 16th Ave, Phoenix, AZ 85007",lat:33.4590,lng:-112.0930,desc:"Learn stilt-walking, unicycling, juggling, trapeze, aerial silks, acrobatics and clowning from experienced teaching artists. Week ends with a family show!",schedule:"Mon–Fri, 9am–4pm",web:"https://phxyouthcircus.org",extras:"Groups of 8 or less. Family showcase each Friday.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
   {id:17,name:"Desert Foothills Theater Camp",org:"Desert Foothills Theater",type:"Arts",ages:"4-17",cost:"$280/wk",costNum:280,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Two Valley locations",lat:33.8000,lng:-111.9500,desc:"Acting, dancing, music, crafts and dance parties in a supportive creative environment. 12 fun sessions across two locations.",schedule:"Mon–Fri, 9am–3pm",web:"https://dftheater.org",extras:"Two locations. One of the most popular theater camps in the Valley.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
   {id:18,name:"Scottsdale Desert Stages Theatre Camp",org:"Desert Stages Theatre",type:"Arts",ages:"4-18",cost:"$345/wk",costNum:345,dates:"June 2 – July 25",startDate:"2025-06-02",endDate:"2025-07-25",address:"7014 E Camelback Rd, Scottsdale, AZ 85251",lat:33.5028,lng:-111.9261,desc:"Award-winning non-profit performing arts theatre camp. Acting, singing, and dancing in Scottsdale Fashion Square. Mini-productions each session.",schedule:"Mon–Fri, 9am–3pm",web:"https://desertstages.org",phone:"(480) 348-0110",extras:"Professional instruction. Family showcase at end of session.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
@@ -56,27 +56,27 @@ const CAMPS = [
   {id:20,name:"Saint Barnabas Arts Camp",org:"Saint Barnabas Episcopal Church",type:"Arts",ages:"5-15",cost:"$150/wk",costNum:150,dates:"June 9 – July 11",startDate:"2025-06-09",endDate:"2025-07-11",address:"Phoenix, AZ",lat:33.5100,lng:-112.0400,desc:"Affordable fine arts camp exploring visual arts, music, drama, and creativity in a welcoming community environment.",schedule:"Mon–Fri, 9am–noon",extras:"One of the most affordable arts camps in Phoenix.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
 
   // ── SPORTS ──────────────────────────────────────────────────────────────
-  {id:21,name:"Phoenix Suns Basketball Camp",org:"Phoenix Suns",type:"Sports",ages:"6-17",cost:"$299/wk",costNum:299,dates:"June 2 – June 27",startDate:"2025-06-02",endDate:"2025-06-27",address:"Multiple Valley locations",lat:33.4457,lng:-112.0712,desc:"Official Suns camp with professional coaching, drills, skills sessions and scrimmages. Four locations across the Valley this summer.",schedule:"Mon–Fri, 9am–3pm",web:"https://suns.com/camps",extras:"4 sessions at different Valley locations. Jersey included.",extCare:false,beforeCare:false,afterCare:false,featured:true,registrationOpen:true,reviews:[{name:"Marcus J.",rating:5,text:"My son was over the moon. Real Suns coaches, great drills, unforgettable week.",childAge:"12",date:"Jun 2024"}]},
+  {id:21,name:"Phoenix Suns Basketball Camp",org:"Phoenix Suns",type:"Sports",ages:"6-17",cost:"$299/wk",costNum:299,dates:"June 2 – June 27",startDate:"2025-06-02",endDate:"2025-06-27",address:"Multiple Valley locations",lat:33.4457,lng:-112.0712,desc:"Official Suns camp with professional coaching, drills, skills sessions and scrimmages. Four locations across the Valley this summer.",schedule:"Mon–Fri, 9am–3pm",web:"https://suns.com/camps",extras:"4 sessions at different Valley locations. Jersey included.",extCare:false,beforeCare:false,afterCare:false,featured:true,registrationOpen:true,reviews:[]},
   {id:22,name:"Challenger Sports Soccer Camp",org:"Challenger Sports",type:"Sports",ages:"3-14",cost:"$180/wk",costNum:180,dates:"June 9 – Aug 1",startDate:"2025-06-09",endDate:"2025-08-01",address:"Various Phoenix area fields",lat:33.5722,lng:-112.0893,desc:"North America's largest soccer camp provider with 30+ years of experience. International coaching staff with fun, skills-focused training.",schedule:"Mon–Fri, 9am–12pm or 2pm–5pm",web:"https://challengersports.com",extras:"Ball + backpack included. All ability levels.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
   {id:23,name:"Impact Gymnastics Camp",org:"Impact Gymnastics Academy",type:"Sports",ages:"4-14",cost:"$300/wk",costNum:300,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"7812 N 12th St, Phoenix, AZ 85020",lat:33.5810,lng:-112.0630,desc:"Full and half-day gymnastics camps with tumbling, trampoline, obstacle courses, team sports and relay races in a top facility.",schedule:"Mon–Fri, 9am–3pm (full) or 9am–noon (half)",web:"https://impactgymaz.com",extras:"Full day $400/wk or $85/day. Half day $300/wk or $65/day.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
   {id:24,name:"Xtreme Gymnastics Fit-n-Fun Camp",org:"Xtreme Gymnastics",type:"Sports",ages:"3-12",cost:"$78/wk",costNum:78,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"14000 N Hayden Rd, Scottsdale, AZ 85260",lat:33.6310,lng:-111.9080,desc:"Gymnastics, trampolining, obstacle courses, team sports, relay races and inflatables promoting health and fitness in a fun setting.",schedule:"Multiple daily session times",web:"https://xtremegymnastics.com",extras:"Prices start at $78. One of the most affordable sports camps.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
-  {id:25,name:"Rancho Solano Summer Camp",org:"Rancho Solano Preparatory School",type:"Sports",ages:"3-12",cost:"$375/wk",costNum:375,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"9180 E Via de Ventura, Scottsdale, AZ 85258",lat:33.5600,lng:-111.8900,desc:"Award-winning day camp with daily swimming included. Drone racing, STEM, arts, sports, Roblox, Minecraft and more. 23+ years of experience.",schedule:"Mon–Fri, 7:30am–5:30pm",web:"https://ranchosummercamps.com",extras:"Swimming, extended care and snack ALL included. PreK–8th grade.",extCare:true,beforeCare:true,afterCare:true,featured:true,registrationOpen:true,reviews:[{name:"Michael P.",rating:5,text:"Michael had the time of his life. The drone racing was his favorite part.",childAge:"10",date:"Jul 2024"}]},
+  {id:25,name:"Rancho Solano Summer Camp",org:"Rancho Solano Preparatory School",type:"Sports",ages:"3-12",cost:"$375/wk",costNum:375,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"9180 E Via de Ventura, Scottsdale, AZ 85258",lat:33.5600,lng:-111.8900,desc:"Award-winning day camp with daily swimming included. Drone racing, STEM, arts, sports, Roblox, Minecraft and more. 23+ years of experience.",schedule:"Mon–Fri, 7:30am–5:30pm",web:"https://ranchosummercamps.com",extras:"Swimming, extended care and snack ALL included. PreK–8th grade.",extCare:true,beforeCare:true,afterCare:true,featured:true,registrationOpen:true,reviews:[]},
   {id:26,name:"Paradise Valley Karate Camp",org:"Paradise Valley School of Karate",type:"Sports",ages:"5-14",cost:"$199/wk",costNum:199,dates:"May 27 – Aug 1",startDate:"2025-05-27",endDate:"2025-08-01",address:"Paradise Valley, AZ",lat:33.5400,lng:-111.9600,desc:"Martial arts camp teaching discipline, focus, respect, and confidence through fun age-appropriate instruction. Building life skills alongside physical skills.",schedule:"Mon–Fri, 9am–3pm",extras:"Beginner-friendly. Character development focus.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
 
   // ── MUSIC / DANCE / THEATER ──────────────────────────────────────────────
-  {id:27,name:"Valley Youth Theatre Summer Camp",org:"Valley Youth Theatre",type:"Music",ages:"6-18",cost:"$375/wk",costNum:375,dates:"June 2 – July 25",startDate:"2025-06-02",endDate:"2025-07-25",address:"525 N 1st St, Phoenix, AZ 85004",lat:33.4523,lng:-112.0707,desc:"Professional musical theatre training in voice, movement, and acting. Campers perform in a full production at end of session.",schedule:"Mon–Fri, 9am–3pm",web:"https://vyt.com",phone:"(602) 253-8188",extras:"Scholarships available. Notable alumni include Emma Stone.",extCare:false,beforeCare:false,afterCare:false,featured:true,registrationOpen:false,reviews:[{name:"Rachel P.",rating:5,text:"My daughter has done this 4 years in a row. Absolute highlight of her summer!",childAge:"13",date:"Aug 2024"}]},
+  {id:27,name:"Valley Youth Theatre Summer Camp",org:"Valley Youth Theatre",type:"Music",ages:"6-18",cost:"$375/wk",costNum:375,dates:"June 2 – July 25",startDate:"2025-06-02",endDate:"2025-07-25",address:"525 N 1st St, Phoenix, AZ 85004",lat:33.4523,lng:-112.0707,desc:"Professional musical theatre training in voice, movement, and acting. Campers perform in a full production at end of session.",schedule:"Mon–Fri, 9am–3pm",web:"https://vyt.com",phone:"(602) 253-8188",extras:"Scholarships available. Notable alumni include Emma Stone.",extCare:false,beforeCare:false,afterCare:false,featured:true,registrationOpen:false,reviews:[]},
   {id:28,name:"Phoenix Theatre Children's Camp",org:"Phoenix Theatre Company",type:"Arts",ages:"8-17",cost:"$425/wk",costNum:425,dates:"June 23 – July 11",startDate:"2025-06-23",endDate:"2025-07-11",address:"1825 N Central Ave, Phoenix, AZ 85004",lat:33.4793,lng:-112.0740,desc:"Professional theater training in acting, singing, and dance led by Phoenix Theatre Company artists. Ends with a family showcase performance.",schedule:"Mon–Fri, 9am–4pm",web:"https://phoenixtheatre.com",extras:"Costumes provided. Professional-grade instruction.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:false,reviews:[]},
   {id:29,name:"YMCA Dance & Cheer Camp",org:"Valley of the Sun YMCA",type:"Dance",ages:"5-14",cost:"$190/wk",costNum:190,dates:"June 9 – July 25",startDate:"2025-06-09",endDate:"2025-07-25",address:"Multiple YMCA locations",lat:33.4901,lng:-112.1100,desc:"High-energy dance and cheer covering hip-hop, jazz, pom, and cheerleading. Week ends with a family performance.",schedule:"Mon–Fri, 9am–12pm",web:"https://valleyofthesunymca.org",extras:"Before/after care available at many locations.",extCare:true,beforeCare:true,afterCare:true,featured:false,registrationOpen:true,reviews:[]},
 
   // ── ACADEMIC / MIXED ──────────────────────────────────────────────────
-  {id:30,name:"Boys & Girls Club Summer Camp",org:"Boys & Girls Clubs of the Valley",type:"Academic",ages:"5-18",cost:"$50/wk",costNum:50,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"31 locations across the Valley",lat:33.4700,lng:-112.0500,desc:"Affordable, enriching summer programs covering arts, sciences, and sports. Healthy breakfast, snacks, and lunch included at no extra cost.",schedule:"Mon–Fri, 6am–6pm",web:"https://bgcaz.org/summer-camp",phone:"(602) 433-2490",extras:"Meals included! One of the best-value camps in the Valley. 31 locations.",extCare:true,beforeCare:true,afterCare:true,featured:true,registrationOpen:true,reviews:[{name:"Denise A.",rating:5,text:"Incredible value. My kids are fed, safe, learning and having fun all summer.",childAge:"9",date:"Aug 2024"}]},
+  {id:30,name:"Boys & Girls Club Summer Camp",org:"Boys & Girls Clubs of the Valley",type:"Academic",ages:"5-18",cost:"$50/wk",costNum:50,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"31 locations across the Valley",lat:33.4700,lng:-112.0500,desc:"Affordable, enriching summer programs covering arts, sciences, and sports. Healthy breakfast, snacks, and lunch included at no extra cost.",schedule:"Mon–Fri, 6am–6pm",web:"https://bgcaz.org/summer-camp",phone:"(602) 433-2490",extras:"Meals included! One of the best-value camps in the Valley. 31 locations.",extCare:true,beforeCare:true,afterCare:true,featured:true,registrationOpen:true,reviews:[]},
   {id:31,name:"Boys & Girls Clubs of Greater Scottsdale",org:"Boys & Girls Clubs of Greater Scottsdale",type:"Academic",ages:"5-18",cost:"$60/wk",costNum:60,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"4 Scottsdale/Phoenix locations",lat:33.5800,lng:-111.9200,desc:"Arts, sciences and sports programs in a safe, supportive environment. Leadership and career-building experiences for teens.",schedule:"Mon–Fri, 7am–6pm",web:"https://bgcs.org",phone:"(480) 344-5520",extras:"4 locations: Ridgeline, Thunderbirds, Virginia Piper, Vestar branches.",extCare:true,beforeCare:true,afterCare:true,featured:false,registrationOpen:true,reviews:[]},
   {id:32,name:"Deer Valley USD Sunsational Camps",org:"Deer Valley Unified School District",type:"Academic",ages:"4-14",cost:"$115/wk",costNum:115,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"Multiple DVUSD schools, Peoria/Phoenix",lat:33.6800,lng:-112.1500,desc:"Wide variety of camps including sports, arts, music, STEM, theater, field trips, and Mandarin. STEAM projects and Arizona Science Center field trips included.",schedule:"Mon–Fri, 6am–6pm",web:"https://dvusd.org/summerprograms",extras:"$115 for 3 days or $185 for 5 days. Breakfast, snacks and lunch included.",extCare:true,beforeCare:true,afterCare:true,featured:false,registrationOpen:true,reviews:[]},
   {id:33,name:"Summit School Summer Camp",org:"Summit School of Ahwatukee",type:"Academic",ages:"4-12",cost:"$250/wk",costNum:250,dates:"May 27 – July 3",startDate:"2025-05-27",endDate:"2025-07-03",address:"4515 E Muirwood Dr, Phoenix, AZ 85048",lat:33.3100,lng:-112.0000,desc:"Six weeks of fun themed camps: Science, Dino, Under the Sea, Pirate, Camp Olympics, and LEGO. Creative hands-on learning for all students.",schedule:"Mon–Fri, 7am–6pm",web:"https://summitschoolaz.org/summer-camps",phone:"(480) 403-9500",extras:"Open to all students, not just Summit enrollees.",extCare:true,beforeCare:true,afterCare:true,featured:false,registrationOpen:true,reviews:[]},
   {id:34,name:"Peoria Parks Summer Camp",org:"City of Peoria Parks & Recreation",type:"Outdoor",ages:"5-12",cost:"$185/wk",costNum:185,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"Multiple Peoria park locations",lat:33.5806,lng:-112.2374,desc:"STEAM projects, daily field trips to the Arizona Science Center, arts, and sports. A well-rounded affordable camp program.",schedule:"Mon–Fri, 6am–6pm",web:"https://peoriaaz.gov",extras:"$115 for 3 days or $185 for 5 days. Meals included.",extCare:true,beforeCare:true,afterCare:true,featured:false,registrationOpen:true,reviews:[]},
   {id:35,name:"ASU Summer Camp Programs",org:"Arizona State University",type:"Academic",ages:"8-17",cost:"$400/wk",costNum:400,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"13590 N 47th Ave, Phoenix, AZ 85029",lat:33.6100,lng:-112.1400,desc:"University-level hands-on STEM and enrichment camps on ASU West Valley campus. Eight themed camps with critical thinking and project-based learning.",schedule:"Mon–Fri, 9am–4pm",web:"https://asu.edu/summercamp",extras:"Snacks and water provided. Parents view completed projects each week.",extCare:false,beforeCare:false,afterCare:false,featured:false,registrationOpen:true,reviews:[]},
   // ── AQUARIUM / ANIMAL SPECIALTY ──────────────────────────────────────
-  {id:36,name:"Camp OCEAN at OdySea Aquarium",org:"OdySea Aquarium",type:"Outdoor",ages:"5-13",cost:"$375/wk",costNum:375,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"9500 E Via de Ventura, Scottsdale, AZ 85256",lat:33.5400,lng:-111.8900,desc:"Behind-the-scenes aquarium camp with animal encounters, marine biology lessons, and conservation activities. Spots sell out fast every year!",schedule:"Mon–Fri, 9am–3pm",web:"https://odyseaaquarium.com/campocean",phone:"(480) 291-8193",extras:"Voted Best of the Valley Day Camp 2025. Very limited spots — book early!",extCare:false,beforeCare:false,afterCare:false,featured:true,registrationOpen:true,reviews:[{name:"Kelsey M.",rating:5,text:"Absolutely magical. My daughter got to feed stingrays and go behind the scenes. She never stopped talking about it.",childAge:"8",date:"Jul 2024"}]},
+  {id:36,name:"Camp OCEAN at OdySea Aquarium",org:"OdySea Aquarium",type:"Outdoor",ages:"5-13",cost:"$375/wk",costNum:375,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"9500 E Via de Ventura, Scottsdale, AZ 85256",lat:33.5400,lng:-111.8900,desc:"Behind-the-scenes aquarium camp with animal encounters, marine biology lessons, and conservation activities. Spots sell out fast every year!",schedule:"Mon–Fri, 9am–3pm",web:"https://odyseaaquarium.com/campocean",phone:"(480) 291-8193",extras:"Voted Best of the Valley Day Camp 2025. Very limited spots — book early!",extCare:false,beforeCare:false,afterCare:false,featured:true,registrationOpen:true,reviews:[]},
 
   // ── ALL-ROUND / MIXED ──────────────────────────────────────────────────
   {id:37,name:"Camp Kroc",org:"The Salvation Army Kroc Center",type:"Outdoor",ages:"5-13",cost:"$220/wk",costNum:220,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"1375 E Broadway Rd, Phoenix, AZ 85040",lat:33.3960,lng:-112.0430,desc:"Action-packed camp with swimming, rock climbing, arts & crafts, cooking experiments, and sports. Week ends with a Splashtastic Pool Party!",schedule:"Mon–Fri, 7am–6pm",web:"https://krocphoenix.org/camp-kroc",phone:"(602) 352-5762",extras:"Breakfast and lunch included. Scholarships available (up to 50% off). Christian values focus.",extCare:true,beforeCare:true,afterCare:true,featured:false,registrationOpen:true,reviews:[]},
@@ -464,16 +464,8 @@ const CampCard = ({camp,highlighted,saved,comparing,onAddReview,onToggleSave,onS
   const [expanded,setExpanded]=useState(highlighted);
   const [showReview,setShowReview]=useState(false);
   const [copied,setCopied]=useState(false);
-  const [showShare,setShowShare]=useState(false);
   const [reviews,setReviews]=useState(camp.reviews||[]);
   const cardRef=useRef(null);
-  const shareRef=useRef(null);
-  useEffect(()=>{
-    if(!showShare) return;
-    const handler=(e)=>{if(shareRef.current&&!shareRef.current.contains(e.target))setShowShare(false);};
-    document.addEventListener("mousedown",handler);
-    return()=>document.removeEventListener("mousedown",handler);
-  },[showShare]);
   const rating=avg(reviews);
   const ts=TYPE_STYLE[camp.type]||{bg:"#EFF8FF",fg:"#1A6FA8",dot:BLUE};
   useEffect(()=>{if(highlighted&&cardRef.current)cardRef.current.scrollIntoView({behavior:"smooth",block:"center"});},[highlighted]);
@@ -525,24 +517,9 @@ const CampCard = ({camp,highlighted,saved,comparing,onAddReview,onToggleSave,onS
             <button onClick={()=>onToggleCompare(camp)} style={{padding:"9px 10px",borderRadius:10,border:`1.5px solid #E8D5A0`,fontSize:13,cursor:"pointer",background:comparing?BLUE_LIGHT:"white",flexShrink:0,transition:"all 0.15s",fontWeight:700,color:comparing?BLUE_DARK:"#92600A"}} title={comparing?"Remove from compare":"Compare this camp"}>
               ⚖️
             </button>
-            <div style={{position:"relative",flexShrink:0}} ref={shareRef}>
-              <button onClick={()=>setShowShare(!showShare)} style={{...S.btn(false),padding:"9px 10px",borderRadius:10,fontSize:13}} title="Share">
-                📤
-              </button>
-              {showShare&&(
-                <div style={{position:"absolute",right:0,top:"calc(100% + 6px)",background:"white",borderRadius:12,boxShadow:"0 8px 24px rgba(146,64,14,0.15)",border:`1.5px solid #E8D5A0`,zIndex:50,minWidth:180,overflow:"hidden"}}>
-                  {[
-                    ["🔗 Copy link", ()=>{navigator.clipboard.writeText(getCampUrl(camp.id));setCopied(true);setTimeout(()=>{setCopied(false);setShowShare(false);},1500);}],
-                    ["💬 Share via Text", ()=>{window.open(`sms:?body=Check out ${camp.name} on Campful! ${getCampUrl(camp.id)}`);setShowShare(false);}],
-                    ["📱 Share on WhatsApp", ()=>{window.open(`https://wa.me/?text=Check out ${encodeURIComponent(camp.name)} on Campful! ${encodeURIComponent(getCampUrl(camp.id))}`);setShowShare(false);}],
-                  ].map(([label,action])=>(
-                    <button key={label} onClick={action} style={{display:"block",width:"100%",padding:"10px 14px",border:"none",background:"transparent",textAlign:"left",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",color:"#2D1A08",borderBottom:`1px solid #F5EFE0`}}>
-                      {label}
-                    </button>
-                  ))}
-                  {copied&&<div style={{padding:"8px 14px",fontSize:12,color:"#059669",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>✓ Link copied!</div>}
-                </div>
-              )}
+            <button onClick={()=>{const url=getCampUrl(camp.id);if(navigator.share){navigator.share({title:camp.name,text:"Check out "+camp.name+" on Campful!",url});}else{navigator.clipboard.writeText(url).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);}).catch(()=>{prompt("Copy this link:",url);});}}} style={{...S.btn(false),padding:"9px 10px",borderRadius:10,fontSize:13,flexShrink:0}}>
+              {copied?"✓":"📤"}
+            </button>
             </div>
           </div>
           {saved&&<p style={{margin:"8px 0 0",fontSize:11,color:BLUE,fontFamily:"'DM Sans',sans-serif",fontWeight:700}}>🔖 Saved to your schedule</p>}
@@ -750,6 +727,55 @@ const AboutModal = ({onClose}) => {
   );
 };
 
+
+// -- Feedback Modal
+const FeedbackModal = ({onClose}) => {
+  const [msg,setMsg]=useState("");
+  const [sent,setSent]=useState(false);
+  const send=()=>{
+    if(!msg.trim()) return;
+    window.open("mailto:hello@campfulphx.com?subject=Campful Feedback&body="+encodeURIComponent(msg));
+    setSent(true);
+  };
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(92,40,8,0.65)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:16,backdropFilter:"blur(6px)"}}>
+      <div style={{background:"white",borderRadius:20,width:"100%",maxWidth:480,boxShadow:"0 30px 80px rgba(92,40,8,0.25)",overflow:"hidden"}}>
+        <div style={{background:"linear-gradient(135deg,#92400E,#F59E0B)",padding:"20px 24px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <h2 style={{margin:0,fontSize:20,fontWeight:900,fontFamily:"'Fraunces',serif",color:"white"}}>Share Feedback</h2>
+            <p style={{margin:"3px 0 0",fontSize:12,color:"rgba(255,255,255,0.8)",fontFamily:"'DM Sans',sans-serif"}}>Help us make Campful better for Phoenix parents</p>
+          </div>
+          <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:10,padding:"6px 14px",cursor:"pointer",fontSize:13}}>X</button>
+        </div>
+        <div style={{padding:24}}>
+          {sent?(
+            <div style={{textAlign:"center",padding:"24px 0"}}>
+              <div style={{fontSize:40,marginBottom:12}}>💛</div>
+              <p style={{fontFamily:"'Fraunces',serif",fontSize:18,fontWeight:900,color:"#2D1A08",margin:"0 0 8px"}}>Thank you!</p>
+              <p style={{fontSize:13,color:"#92600A",fontFamily:"'DM Sans',sans-serif",margin:"0 0 20px"}}>Your feedback helps the whole Phoenix parent community.</p>
+              <button onClick={onClose} style={{padding:"10px 24px",borderRadius:10,border:"none",background:"#D97706",color:"white",fontWeight:700,cursor:"pointer"}}>Close</button>
+            </div>
+          ):(
+            <>
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+                {["Missing a camp I know about","A camp listing has wrong info","Suggestion for a new feature","General feedback"].map(s=>(
+                  <button key={s} onClick={()=>setMsg(s+": ")} style={{padding:"9px 14px",borderRadius:10,border:"1.5px solid #E8D5A0",background:msg.startsWith(s)?"#FEF3C7":"white",textAlign:"left",cursor:"pointer",fontSize:13,fontFamily:"'DM Sans',sans-serif",color:"#2D1A08"}}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <textarea value={msg} onChange={e=>setMsg(e.target.value)} placeholder="Type your feedback here..." style={{width:"100%",minHeight:100,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E8D5A0",fontSize:13,fontFamily:"'DM Sans',sans-serif",resize:"vertical",boxSizing:"border-box",outline:"none"}}/>
+              <button onClick={send} disabled={!msg.trim()} style={{marginTop:12,width:"100%",padding:"12px",borderRadius:10,border:"none",background:msg.trim()?"#D97706":"#E8D5A0",color:"white",fontWeight:700,fontSize:14,cursor:msg.trim()?"pointer":"default",fontFamily:"'DM Sans',sans-serif"}}>
+                Send Feedback
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Main App ──────────────────────────────────────────────────────────────
 export default function Campful() {
   const [camps,setCamps]=useState(CAMPS);
@@ -766,6 +792,7 @@ export default function Campful() {
   const [showSchedule,setShowSchedule]=useState(false);
   const [showCompare,setShowCompare]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
+  const [showFeedback,setShowFeedback]=useState(false);
   const [compareIds,setCompareIds]=useState(new Set());
   const [alertCamp,setAlertCamp]=useState(null);
   const [savedIds,setSavedIds]=useState(new Set());
@@ -810,13 +837,16 @@ export default function Campful() {
     setIsSearching(true);
     try {
       // Uses Netlify serverless function to keep API key secure
-      const res=await fetch("/.netlify/functions/search",{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({query:aiQuery})
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:`Search the web and find Phoenix Arizona summer camps matching: "${aiQuery}". Return ONLY a raw JSON array (no markdown, no backticks) of 2-3 real camps. Fields: name, org, type (Sports/Arts/STEM/Outdoor/Academic/Dance/Music), ages, cost, costNum (number), dates, startDate (YYYY-MM-DD), endDate (YYYY-MM-DD), address, desc, schedule, web, phone, extras, extCare (bool), beforeCare (bool), afterCare (bool), registrationOpen (bool), lat (~33.4), lng (~-112.0).`}]})
       });
       if(!res.ok) throw new Error("Search failed");
-      const parsed=await res.json();
+      const data=await res.json();
+      const text=data.content.map(i=>i.text||"").join("\n").replace(/```json|```/g,"").trim();
+      const start=text.indexOf("["),end=text.lastIndexOf("]")+1;
+      const parsed=JSON.parse(text.slice(start,end));
       setCamps(prev=>[...parsed.map((c,i)=>({...c,id:Date.now()+i,reviews:[],featured:false,extCare:!!c.extCare,beforeCare:!!c.beforeCare,afterCare:!!c.afterCare,costNum:parseInt((c.cost||"").replace(/[^0-9]/g,""))||0})),...prev]);
       setAiQuery("");
     } catch(e){alert("Search failed — please try again.");}
@@ -843,7 +873,7 @@ export default function Campful() {
                   Campful
                 </h1>
                 <p style={{margin:"4px 0 0",fontSize:13,color:"rgba(255,255,255,0.75)",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.01em"}}>
-                  Summer plans, sorted. By parents, for parents. 🌵
+                  📍 Phoenix & Scottsdale · Summer camps, sorted. By parents, for parents. 🌵
                 </p>
               </div>
             </div>
@@ -852,6 +882,14 @@ export default function Campful() {
               <div style={{background:"rgba(255,255,255,0.15)",borderRadius:12,padding:"6px 12px",backdropFilter:"blur(8px)"}}>
                 <span style={{fontSize:12,color:"rgba(255,255,255,0.9)",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>{camps.length} camps</span>
               </div>
+              <button onClick={()=>setShowAbout(true)} style={{padding:"9px 16px",borderRadius:11,border:"2px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.1)",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",backdropFilter:"blur(8px)"}}>
+                About & FAQ
+              </button>
+              <button onClick={()=>setShowFeedback(true)} style={{padding:"9px 16px",borderRadius:11,border:"2px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.1)",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+                Feedback
+              </button>
+              {compareIds.size>0&&<button onClick={()=>setShowCompare(true)} style={{padding:"9px 16px",borderRadius:11,border:"none",background:"white",color:BLUE_DARK,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>\n                ⚖️ Compare ({compareIds.size})
+              </button>}
               <button onClick={()=>setShowSchedule(true)} style={{padding:"9px 16px",borderRadius:11,border:"2px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.1)",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",backdropFilter:"blur(8px)"}}>
                 📅 Schedule{savedIds.size>0?` (${savedIds.size})`:""}
               </button>
@@ -960,7 +998,7 @@ export default function Campful() {
         )}
 
         <div style={{textAlign:"center",padding:"28px 0 10px",fontSize:12,color:"#D4B896",fontFamily:"'DM Sans',sans-serif"}}>
-          🌵 Campful · Summer plans, sorted. By parents, for parents. · Phoenix, AZ
+          🌵 Campful · Phoenix & Scottsdale Area Summer Camps · By parents, for parents.
         </div>
       </div>
 
@@ -969,6 +1007,7 @@ export default function Campful() {
       {alertCamp&&<AlertModal camp={alertCamp} onClose={()=>setAlertCamp(null)}/>}
       {showCompare&&<CompareModal camps={compareCamps} allCamps={camps} onToggle={toggleCompare} onClose={()=>setShowCompare(false)}/>}
       {showAbout&&<AboutModal onClose={()=>setShowAbout(false)}/>}
+      {showFeedback&&<FeedbackModal onClose={()=>setShowFeedback(false)}/>}
     </div>
   );
 }
