@@ -810,7 +810,7 @@ export default function Campful() {
         headers:{
           "Content-Type":"application/json",
           "anthropic-version":"2023-06-01",
-          "anthropic-dangerous-direct-browser-access":"true"
+          "anthropic-dangerous-direct-browser-access":"true","x-api-key":"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"
         },
         body:JSON.stringify({
           model:"claude-sonnet-4-20250514",
