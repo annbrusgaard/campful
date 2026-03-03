@@ -700,13 +700,6 @@ const AboutModal = ({onClose}) => {
 };
 
 const FeedbackModal = ({onClose}) => {
-  const [msg,setMsg]=useState("");
-  const [sent,setSent]=useState(false);
-  const send=()=>{
-    if(!msg.trim()) return;
-    window.open("mailto:annbrusgaard@gmail.com?subject=Campful Feedback&body="+encodeURIComponent(msg));
-    setSent(true);
-  };
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(92,40,8,0.65)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:16,backdropFilter:"blur(6px)"}}>
       <div style={{background:"white",borderRadius:20,width:"100%",maxWidth:480,boxShadow:"0 30px 80px rgba(92,40,8,0.25)",overflow:"hidden"}}>
@@ -717,34 +710,22 @@ const FeedbackModal = ({onClose}) => {
           </div>
           <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:10,padding:"6px 14px",cursor:"pointer",fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>✕ Close</button>
         </div>
-        <div style={{padding:24}}>
-          {sent?(
-            <div style={{textAlign:"center",padding:"24px 0"}}>
-              <div style={{fontSize:40,marginBottom:12}}>💛</div>
-              <p style={{fontFamily:"'Fraunces',serif",fontSize:18,fontWeight:900,color:"#2D1A08",margin:"0 0 8px"}}>Thank you!</p>
-              <p style={{fontSize:13,color:"#92600A",fontFamily:"'DM Sans',sans-serif",margin:"0 0 20px"}}>Your feedback helps the whole Phoenix parent community.</p>
-              <button onClick={onClose} style={{padding:"10px 24px",borderRadius:10,border:"none",background:"#D97706",color:"white",fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Close</button>
-            </div>
-          ):(
-            <>
-              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
-                {["Missing a camp I know about","A camp listing has wrong info","Suggestion for a new feature","General feedback"].map(s=>(
-                  <button key={s} onClick={()=>setMsg(s+": ")} style={{padding:"9px 14px",borderRadius:10,border:"1.5px solid #E8D5A0",background:msg.startsWith(s)?"#FEF3C7":"white",textAlign:"left",cursor:"pointer",fontSize:13,fontFamily:"'DM Sans',sans-serif",color:"#2D1A08"}}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-              <textarea value={msg} onChange={e=>setMsg(e.target.value)} placeholder="Type your feedback here..." style={{width:"100%",minHeight:100,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E8D5A0",fontSize:13,fontFamily:"'DM Sans',sans-serif",resize:"vertical",boxSizing:"border-box",outline:"none"}}/>
-              <button onClick={send} disabled={!msg.trim()} style={{marginTop:12,width:"100%",padding:"12px",borderRadius:10,border:"none",background:msg.trim()?"#D97706":"#E8D5A0",color:"white",fontWeight:700,fontSize:14,cursor:msg.trim()?"pointer":"default",fontFamily:"'DM Sans',sans-serif"}}>
-                Send Feedback →
-              </button>
-            </>
-          )}
+        <div style={{padding:24,textAlign:"center"}}>
+          <div style={{fontSize:40,marginBottom:12}}>💛</div>
+          <p style={{fontFamily:"'Fraunces',serif",fontSize:17,fontWeight:900,color:"#2D1A08",margin:"0 0 8px"}}>We'd love your feedback!</p>
+          <p style={{fontSize:13,color:"#92600A",fontFamily:"'DM Sans',sans-serif",margin:"0 0 24px"}}>Takes less than a minute. Helps the whole Phoenix parent community.</p>
+          <button onClick={()=>window.open("https://docs.google.com/forms/d/e/1FAIpQLScvBTZj4nPY31rRVEZZjFdhYDGmRtEhbesxwn4S9uDxlC4u7Q/viewform","_blank")} style={{padding:"12px 28px",borderRadius:10,border:"none",background:"#D97706",color:"white",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",marginBottom:12,width:"100%"}}>
+            Open Feedback Form →
+          </button>
+          <button onClick={onClose} style={{padding:"10px 28px",borderRadius:10,border:"1.5px solid #E8D5A0",background:"white",color:"#92600A",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",width:"100%"}}>
+            Maybe later
+          </button>
         </div>
       </div>
     </div>
   );
 };
+
 
 export default function Campful() {
   const [camps,setCamps]=useState(CAMPS);
