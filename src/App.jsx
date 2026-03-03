@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+  import { useState, useEffect, useRef } from "react";
 
 const fontLink = document.createElement("link");
 fontLink.rel = "stylesheet";
@@ -805,29 +805,14 @@ export default function Campful() {
     if(!aiQuery.trim()) return;
     setIsSearching(true);
     try {
-      const res=await fetch("https://api.anthropic.com/v1/messages",{
+      const res=await fetch("/.netlify/functions/search",{
         method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "anthropic-version":"2023-06-01",
-          "anthropic-dangerous-direct-browser-access":"true","x-api-key":"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"
-        },
-        body:JSON.stringify({
-          model:"claude-sonnet-4-20250514",
-          max_tokens:1500,
-          tools:[{type:"web_search_20250305",name:"web_search"}],
-          messages:[{role:"user",content:`Search the web and find Phoenix Arizona summer camps matching: "${aiQuery}". Return ONLY a raw JSON array (no markdown, no backticks) of 2-3 real camps. Each camp needs: name, org, type (one of: Sports/Arts/STEM/Outdoor/Academic/Dance/Music), ages, cost, costNum (number only), dates, startDate (YYYY-MM-DD), endDate (YYYY-MM-DD), address, desc, schedule, web, phone, extras, extCare (bool), beforeCare (bool), afterCare (bool), springBreak (bool), singleDay (bool), registrationOpen (bool), lat (number ~33.4), lng (number ~-112.0).`}]
-        })
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({query:aiQuery})
       });
-      if(!res.ok) throw new Error("Search failed");
-      const data=await res.json();
-      const text=data.content.map(i=>i.text||"").join("\n").replace(/```json|```/g,"").trim();
-      const start=text.indexOf("["),end=text.lastIndexOf("]")+1;
-      if(start===-1||end===0) throw new Error("No results");
-      const parsed=JSON.parse(text.slice(start,end));
-      setCamps(prev=>[...parsed.map((c,i)=>({...c,id:Date.now()+i,reviews:[],featured:false,extCare:!!c.extCare,beforeCare:!!c.beforeCare,afterCare:!!c.afterCare,springBreak:!!c.springBreak,singleDay:!!c.singleDay,costNum:parseInt((c.cost||"").replace(/[^0-9]/g,""))||0})),...prev]);
-      setAiQuery("");
-    } catch(e){alert("AI search failed — please check your API key is set in Netlify environment variables, or try again.");}
+      if(!res.ok) throw new Error(await res.text());
+      const parsed=await res.json();
+    } catch(e){console.error('AI search error:',e); alert('AI search error: '+e.message);}
     setIsSearching(false);
   };
 
