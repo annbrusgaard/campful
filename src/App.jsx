@@ -530,7 +530,7 @@ const CampCard = ({camp,highlighted,saved,comparing,onAddReview,onToggleSave,onS
                 📤
               </button>
               {showShare&&(
-                <div style={{position:"absolute",right:0,top:"calc(100% + 6px)",background:"white",borderRadius:12,boxShadow:"0 8px 24px rgba(146,64,14,0.15)",border:`1.5px solid #E8D5A0`,zIndex:9999,minWidth:180,overflow:"hidden"}}>
+                <div style={{position:"absolute",right:0,top:"calc(100% + 6px)",background:"white",borderRadius:12,boxShadow:"0 8px 24px rgba(146,64,14,0.15)",border:`1.5px solid #E8D5A0`,zIndex:50,minWidth:180,overflow:"hidden"}}>
                   {[
                     ["🔗 Copy link", ()=>{navigator.clipboard.writeText(getCampUrl(camp.id));setCopied(true);setTimeout(()=>{setCopied(false);setShowShare(false);},1500);}],
                     ["💬 Share via Text", ()=>{window.open(`sms:?body=Check out ${camp.name} on Campful! ${getCampUrl(camp.id)}`);setShowShare(false);}],
@@ -810,16 +810,13 @@ export default function Campful() {
     setIsSearching(true);
     try {
       // Uses Netlify serverless function to keep API key secure
-      const res=await fetch("https://api.anthropic.com/v1/messages",{
+      const res=await fetch("/.netlify/functions/search",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:`Search the web and find Phoenix Arizona summer camps matching: "${aiQuery}". Return ONLY a raw JSON array (no markdown, no backticks) of 2-3 real camps. Fields: name, org, type (Sports/Arts/STEM/Outdoor/Academic/Dance/Music), ages, cost, costNum (number), dates, startDate (YYYY-MM-DD), endDate (YYYY-MM-DD), address, desc, schedule, web, phone, extras, extCare (bool), beforeCare (bool), afterCare (bool), registrationOpen (bool), lat (~33.4), lng (~-112.0).`}]})
+        body:JSON.stringify({query:aiQuery})
       });
       if(!res.ok) throw new Error("Search failed");
-      const data=await res.json();
-      const text=data.content.map(i=>i.text||"").join("\n").replace(/```json|```/g,"").trim();
-      const start=text.indexOf("["),end=text.lastIndexOf("]")+1;
-      const parsed=JSON.parse(text.slice(start,end));
+      const parsed=await res.json();
       setCamps(prev=>[...parsed.map((c,i)=>({...c,id:Date.now()+i,reviews:[],featured:false,extCare:!!c.extCare,beforeCare:!!c.beforeCare,afterCare:!!c.afterCare,costNum:parseInt((c.cost||"").replace(/[^0-9]/g,""))||0})),...prev]);
       setAiQuery("");
     } catch(e){alert("Search failed — please try again.");}
@@ -846,7 +843,7 @@ export default function Campful() {
                   Campful
                 </h1>
                 <p style={{margin:"4px 0 0",fontSize:13,color:"rgba(255,255,255,0.75)",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.01em"}}>
-                  📍 Phoenix & Scottsdale · Summer camps, sorted. By parents, for parents. 🌵
+                  Summer plans, sorted. By parents, for parents. 🌵
                 </p>
               </div>
             </div>
@@ -855,11 +852,6 @@ export default function Campful() {
               <div style={{background:"rgba(255,255,255,0.15)",borderRadius:12,padding:"6px 12px",backdropFilter:"blur(8px)"}}>
                 <span style={{fontSize:12,color:"rgba(255,255,255,0.9)",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>{camps.length} camps</span>
               </div>
-              <button onClick={()=>setShowAbout(true)} style={{padding:"9px 16px",borderRadius:11,border:"2px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.1)",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",backdropFilter:"blur(8px)"}}>
-                About & FAQ
-              </button>
-              {compareIds.size>0&&<button onClick={()=>setShowCompare(true)} style={{padding:"9px 16px",borderRadius:11,border:"none",background:"white",color:BLUE_DARK,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>\n                ⚖️ Compare ({compareIds.size})
-              </button>}
               <button onClick={()=>setShowSchedule(true)} style={{padding:"9px 16px",borderRadius:11,border:"2px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.1)",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",backdropFilter:"blur(8px)"}}>
                 📅 Schedule{savedIds.size>0?` (${savedIds.size})`:""}
               </button>
@@ -968,7 +960,7 @@ export default function Campful() {
         )}
 
         <div style={{textAlign:"center",padding:"28px 0 10px",fontSize:12,color:"#D4B896",fontFamily:"'DM Sans',sans-serif"}}>
-          🌵 Campful · Phoenix & Scottsdale Area Summer Camps · By parents, for parents.
+          🌵 Campful · Summer plans, sorted. By parents, for parents. · Phoenix, AZ
         </div>
       </div>
 
