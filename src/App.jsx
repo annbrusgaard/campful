@@ -243,30 +243,35 @@ const AlertModal = ({camp,onClose}) => {
   );
 };
 
-const ScheduleBuilder = ({savedCamps,onToggleSave,onClose}) => {
+const FavoritesModal = ({savedCamps,onToggleSave,onClose}) => {
   const totalCost=savedCamps.reduce((s,c)=>s+(c.costNum||0),0);
-  const WEEKS=[
-    {label:"June 2–6",start:"2025-06-02"},{label:"June 9–13",start:"2025-06-09"},
-    {label:"June 16–20",start:"2025-06-16"},{label:"June 23–27",start:"2025-06-23"},
-    {label:"July 7–11",start:"2025-07-07"},{label:"July 14–18",start:"2025-07-14"},
-    {label:"July 21–25",start:"2025-07-21"},{label:"July 28–Aug 1",start:"2025-07-28"},
-    {label:"Aug 4–8",start:"2025-08-04"},
-  ];
-  const campForWeek=w=>savedCamps.find(c=>c.startDate&&c.endDate&&w.start>=c.startDate&&w.start<=c.endDate);
+
+  const shareList=()=>{
+    if(!savedCamps.length) return;
+    // Build URL with camp IDs encoded
+    const ids=savedCamps.map(c=>c.id).join(",");
+    const url=window.location.origin+"?favorites="+ids;
+    if(navigator.share){
+      navigator.share({title:"My Campful Favorites",text:"Check out these Phoenix summer camps I saved on Campful!",url});
+    } else {
+      navigator.clipboard.writeText(url).then(()=>alert("Link copied! Share it with friends.")).catch(()=>prompt("Copy this link:",url));
+    }
+  };
+
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(146,64,14,0.65)",display:"flex",alignItems:"flex-start",justifyContent:"center",zIndex:200,padding:16,overflowY:"auto",backdropFilter:"blur(6px)"}}>
-      <div style={{background:"white",borderRadius:20,width:"100%",maxWidth:680,boxShadow:"0 30px 80px rgba(146,64,14,0.3)",margin:"auto",overflow:"hidden"}}>
-        <div style={{background:`linear-gradient(135deg,#92400E,#F59E0B)`,padding:"24px 28px"}}>
+      <div style={{background:"white",borderRadius:20,width:"100%",maxWidth:600,boxShadow:"0 30px 80px rgba(146,64,14,0.3)",margin:"auto",overflow:"hidden"}}>
+        <div style={{background:"linear-gradient(135deg,#92400E,#F59E0B)",padding:"24px 28px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div>
-              <h2 style={{margin:"0 0 4px",fontSize:24,fontWeight:900,fontFamily:"'Fraunces',serif",color:"white"}}>📅 Summer Schedule</h2>
-              <p style={{margin:0,fontSize:13,color:"rgba(255,255,255,0.8)",fontFamily:"'DM Sans',sans-serif"}}>Build your family's perfect summer</p>
+              <h2 style={{margin:"0 0 4px",fontSize:24,fontWeight:900,fontFamily:"'Fraunces',serif",color:"white"}}>❤️ My Favorites</h2>
+              <p style={{margin:0,fontSize:13,color:"rgba(255,255,255,0.8)",fontFamily:"'DM Sans',sans-serif"}}>Your saved Phoenix summer camps</p>
             </div>
             <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:10,padding:"6px 14px",cursor:"pointer",fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>✕ Close</button>
           </div>
           {savedCamps.length>0&&(
             <div style={{marginTop:16,display:"flex",gap:12,flexWrap:"wrap"}}>
-              {[["CAMPS SAVED",savedCamps.length],["EST. COST",`$${totalCost.toLocaleString()}`]].map(([l,v])=>(
+              {[["CAMPS SAVED",savedCamps.length],["EST. TOTAL","$"+totalCost.toLocaleString()]].map(([l,v])=>(
                 <div key={l} style={{background:"rgba(255,255,255,0.15)",borderRadius:10,padding:"8px 16px"}}>
                   <div style={{fontSize:10,color:"rgba(255,255,255,0.7)",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.05em"}}>{l}</div>
                   <div style={{fontSize:22,fontWeight:900,color:"white",fontFamily:"'Fraunces',serif"}}>{v}</div>
@@ -276,34 +281,13 @@ const ScheduleBuilder = ({savedCamps,onToggleSave,onClose}) => {
           )}
         </div>
         <div style={{padding:28}}>
-          <h3 style={{margin:"0 0 14px",fontSize:16,fontWeight:700,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Weekly View</h3>
-          <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:24}}>
-            {WEEKS.map(week=>{
-              const camp=campForWeek(week);
-              const ts=camp?TYPE_STYLE[camp.type]:null;
-              return (
-                <div key={week.label} style={{display:"flex",alignItems:"center",gap:12}}>
-                  <div style={{width:110,fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>{week.label}</div>
-                  <div style={{flex:1,borderRadius:10,padding:"9px 14px",background:camp?(ts?.bg||BLUE_LIGHT):SKY,border:`1.5px solid ${camp?(ts?.dot||BLUE):"#E8D5A0"}`,display:"flex",alignItems:"center",justifyContent:"space-between",minHeight:38}}>
-                    {camp?(<>
-                      <span style={{fontSize:13,fontWeight:700,color:ts?.fg||"#2D1A08",fontFamily:"'DM Sans',sans-serif"}}>{camp.name}</span>
-                      <button onClick={()=>onToggleSave(camp)} style={{fontSize:11,padding:"3px 10px",borderRadius:8,border:"none",background:"rgba(0,0,0,0.08)",color:ts?.fg||"#2D1A08",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Remove</button>
-                    </>):(
-                      <span style={{fontSize:12,color:"#D4B896",fontFamily:"'DM Sans',sans-serif"}}>Free week — add a camp below</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
           {savedCamps.length>0?(
             <>
-              <h3 style={{margin:"0 0 12px",fontSize:16,fontWeight:700,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Saved Camps</h3>
               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:18}}>
                 {savedCamps.map(camp=>{
                   const ts=TYPE_STYLE[camp.type]||{};
                   return (
-                    <div key={camp.id} style={{display:"flex",alignItems:"center",gap:12,padding:"11px 14px",background:SKY,borderRadius:12,border:`1.5px solid #E8D5A0`}}>
+                    <div key={camp.id} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",background:SKY,borderRadius:12,border:"1.5px solid #E8D5A0"}}>
                       <span style={{width:10,height:10,borderRadius:"50%",background:ts.dot||BLUE,flexShrink:0,display:"inline-block"}}/>
                       <div style={{flex:1}}>
                         <div style={{fontSize:13,fontWeight:700,color:"#2D1A08",fontFamily:"'DM Sans',sans-serif"}}>{camp.name}</div>
@@ -315,16 +299,19 @@ const ScheduleBuilder = ({savedCamps,onToggleSave,onClose}) => {
                   );
                 })}
               </div>
-              <button onClick={()=>exportAllToICal(savedCamps)} style={{...S.btn(true),width:"100%",padding:"13px 0",borderRadius:12,fontSize:13}}>
+              <button onClick={shareList} style={{...S.btn(true),width:"100%",padding:"13px 0",borderRadius:12,fontSize:13,marginBottom:8}}>
+                🔗 Share My Favorites List
+              </button>
+              <button onClick={()=>exportAllToICal(savedCamps)} style={{...S.btn(false),width:"100%",padding:"13px 0",borderRadius:12,fontSize:13}}>
                 📅 Export All to Calendar
               </button>
-              <p style={{margin:"8px 0 0",fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif",textAlign:"center"}}>Works with Google Calendar, Apple Calendar & Outlook</p>
+              <p style={{margin:"8px 0 0",fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif",textAlign:"center"}}>Share your list with friends or export to Google Calendar, Apple Calendar & Outlook</p>
             </>
           ):(
-            <div style={{textAlign:"center",padding:24,background:SKY,borderRadius:14,border:`1.5px dashed #D4B896`}}>
-              <div style={{fontSize:36,marginBottom:8}}>🌵</div>
-              <p style={{margin:"0 0 4px",fontSize:15,fontWeight:700,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>No camps saved yet</p>
-              <p style={{margin:0,fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>Hit 🏷️ on any camp card to save it here</p>
+            <div style={{textAlign:"center",padding:24,background:SKY,borderRadius:14,border:"1.5px dashed #D4B896"}}>
+              <div style={{fontSize:36,marginBottom:8}}>🤍</div>
+              <p style={{margin:"0 0 4px",fontSize:15,fontWeight:700,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>No favorites yet</p>
+              <p style={{margin:0,fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>Hit ❤️ on any camp card to save it here</p>
             </div>
           )}
         </div>
@@ -332,6 +319,7 @@ const ScheduleBuilder = ({savedCamps,onToggleSave,onClose}) => {
     </div>
   );
 };
+
 
 const AddCampModal = ({onClose,onAdd}) => {
   const [f,setF]=useState({name:"",org:"",type:"Sports",ages:"",cost:"",dates:"",startDate:"2025-06-02",endDate:"2025-08-08",address:"",desc:"",schedule:"",web:"",phone:"",extras:"",extCare:false,beforeCare:false,afterCare:false,springBreak:false,singleDay:false});
@@ -488,8 +476,8 @@ const CampCard = ({camp,highlighted,saved,comparing,onAddReview,onToggleSave,onS
               ⭐ Review
             </button>
             <button onClick={()=>onShowAlert(camp)} style={{...S.btn(false),padding:"9px 10px",borderRadius:10,fontSize:13,flexShrink:0}} title="Registration alert">🔔</button>
-            <button onClick={()=>onToggleSave(camp)} style={{padding:"9px 10px",borderRadius:10,border:`1.5px solid #E8D5A0`,fontSize:14,cursor:"pointer",background:saved?BLUE_LIGHT:"white",flexShrink:0,transition:"all 0.15s"}} title={saved?"Remove from schedule":"Save to schedule"}>
-              {saved?"🔖":"🏷️"}
+            <button onClick={()=>onToggleSave(camp)} style={{padding:"9px 10px",borderRadius:10,border:`1.5px solid #E8D5A0`,fontSize:14,cursor:"pointer",background:saved?BLUE_LIGHT:"white",flexShrink:0,transition:"all 0.15s"}} title={saved?"Remove from favorites":"Save to favorites"}>
+              {saved?"❤️":"🤍"}
             </button>
             <button onClick={()=>onToggleCompare(camp)} style={{padding:"9px 10px",borderRadius:10,border:`1.5px solid #E8D5A0`,fontSize:13,cursor:"pointer",background:comparing?BLUE_LIGHT:"white",flexShrink:0,transition:"all 0.15s",fontWeight:700,color:comparing?BLUE_DARK:"#92600A"}} title={comparing?"Remove from compare":"Compare this camp"}>
               ⚖️
@@ -498,7 +486,7 @@ const CampCard = ({camp,highlighted,saved,comparing,onAddReview,onToggleSave,onS
               {copied?"✓":"📤"}
             </button>
           </div>
-          {saved&&<p style={{margin:"8px 0 0",fontSize:11,color:BLUE,fontFamily:"'DM Sans',sans-serif",fontWeight:700}}>🔖 Saved to your schedule</p>}
+          {saved&&<p style={{margin:"8px 0 0",fontSize:11,color:BLUE,fontFamily:"'DM Sans',sans-serif",fontWeight:700}}>❤️ Saved to favorites</p>}
         </div>
         {expanded&&(
           <div style={{borderTop:`1.5px solid #E8D5A0`,padding:20,background:SKY}}>
@@ -737,7 +725,7 @@ export default function Campful() {
   const [sortBy,setSortBy]=useState("featured");
   const [view,setView]=useState("list");
   const [showAdd,setShowAdd]=useState(false);
-  const [showSchedule,setShowSchedule]=useState(false);
+  const [showFavorites,setShowFavorites]=useState(false);
   const [showCompare,setShowCompare]=useState(false);
   const [showAbout,setShowAbout]=useState(false);
   const [showFeedback,setShowFeedback]=useState(false);
@@ -745,6 +733,18 @@ export default function Campful() {
   const [alertCamp,setAlertCamp]=useState(null);
   const [savedIds,setSavedIds]=useState(new Set());
   const [highlighted,setHighlighted]=useState(getHighlightedId());
+
+  // Load shared favorites from URL
+  useEffect(()=>{
+    const params=new URLSearchParams(window.location.search);
+    const favIds=params.get("favorites");
+    if(favIds){
+      const ids=new Set(favIds.split(",").map(Number));
+      setSavedIds(ids);
+      // Clean up URL without reload
+      window.history.replaceState({},"",window.location.pathname);
+    }
+  },[]);
   const [zipCode,setZipCode]=useState("");
   const [radius,setRadius]=useState("10");
   const [zipCoords,setZipCoords]=useState(null);
@@ -805,15 +805,15 @@ export default function Campful() {
                 About & FAQ
               </button>
               <button onClick={()=>setShowFeedback(true)} style={{padding:"9px 16px",borderRadius:11,border:"2px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.1)",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
-                💛 Feedback
+                🙋 Feedback
               </button>
               {compareIds.size>0&&(
                 <button onClick={()=>setShowCompare(true)} style={{padding:"9px 16px",borderRadius:11,border:"none",background:"white",color:BLUE_DARK,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
                   ⚖️ Compare ({compareIds.size})
                 </button>
               )}
-              <button onClick={()=>setShowSchedule(true)} style={{padding:"9px 16px",borderRadius:11,border:"2px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.1)",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
-                📅 Schedule{savedIds.size>0?` (${savedIds.size})`:""}
+              <button onClick={()=>setShowFavorites(true)} style={{padding:"9px 16px",borderRadius:11,border:"2px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.1)",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+                ❤️ Favorites{savedIds.size>0?` (${savedIds.size})`:""}
               </button>
               <button onClick={()=>setShowAdd(true)} style={{padding:"9px 16px",borderRadius:11,border:"none",background:"white",color:BLUE,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
                 + Add a Camp
@@ -921,7 +921,7 @@ export default function Campful() {
         </div>
       </div>
 
-      {showSchedule&&<ScheduleBuilder savedCamps={savedCamps} onToggleSave={toggleSave} onClose={()=>setShowSchedule(false)}/>}
+      {showFavorites&&<FavoritesModal savedCamps={savedCamps} onToggleSave={toggleSave} onClose={()=>setShowFavorites(false)}/>}
       {showAdd&&<AddCampModal onClose={()=>setShowAdd(false)} onAdd={c=>setCamps(prev=>[c,...prev])}/>}
       {alertCamp&&<AlertModal camp={alertCamp} onClose={()=>setAlertCamp(null)}/>}
       {showCompare&&<CompareModal camps={compareCamps} allCamps={camps} onToggle={toggleCompare} onClose={()=>setShowCompare(false)}/>}
