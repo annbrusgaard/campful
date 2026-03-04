@@ -134,23 +134,29 @@ const addUtm = (url) => {
 
 const exportToICal = (camp) => {
   const fmt = d => d.replace(/-/g,"");
-  const ical = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Campful//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH",
-    "BEGIN:VEVENT",`UID:campful-${camp.id}@campful.app`,
-    `DTSTART;VALUE=DATE:${fmt(camp.startDate||"2025-06-02")}`,
-    `DTEND;VALUE=DATE:${fmt(camp.endDate||"2025-08-08")}`,
-    `SUMMARY:${camp.name}`,`DESCRIPTION:${camp.desc}\\nSchedule: ${camp.schedule||""}\\nCost: ${camp.cost||""}\\nWebsite: ${camp.web||""}`,
-    `LOCATION:${camp.address}`,"STATUS:CONFIRMED","END:VEVENT","END:VCALENDAR"].join("\r\n");
-  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([ical],{type:"text/calendar"}));
-  a.download=`${camp.name.replace(/[^a-z0-9]/gi,"_")}.ics`; a.click();
+  const start = fmt(camp.startDate||"2025-06-02");
+  const end = fmt(camp.endDate||"2025-08-08");
+  const details = encodeURIComponent(`${camp.desc||""}
+Schedule: ${camp.schedule||""}
+Cost: ${camp.cost||""}
+Website: ${camp.web||""}`);
+  const location = encodeURIComponent(camp.address||"Phoenix, AZ");
+  const title = encodeURIComponent(camp.name);
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+  window.open(url, "_blank");
 };
 const exportAllToICal = (camps) => {
   const fmt = d => d.replace(/-/g,"");
-  const events = camps.map(c=>["BEGIN:VEVENT",`UID:campful-${c.id}@campful.app`,
-    `DTSTART;VALUE=DATE:${fmt(c.startDate||"2025-06-02")}`,`DTEND;VALUE=DATE:${fmt(c.endDate||"2025-08-08")}`,
-    `SUMMARY:${c.name}`,`LOCATION:${c.address}`,"STATUS:CONFIRMED","END:VEVENT"].join("\r\n")).join("\r\n");
-  const ical=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Campful//EN\r\n${events}\r\nEND:VCALENDAR`;
-  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([ical],{type:"text/calendar"}));
-  a.download="campful_summer.ics"; a.click();
+  camps.forEach((camp,i) => {
+    setTimeout(()=>{
+      const start = fmt(camp.startDate||"2025-06-02");
+      const end = fmt(camp.endDate||"2025-08-08");
+      const title = encodeURIComponent(camp.name);
+      const location = encodeURIComponent(camp.address||"Phoenix, AZ");
+      const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${location}`;
+      window.open(url, "_blank");
+    }, i * 300);
+  });
 };
 
 const S = {
@@ -306,7 +312,7 @@ const FavoritesModal = ({savedCamps,onToggleSave,onClose}) => {
                         <div style={{fontSize:13,fontWeight:700,color:"#2D1A08",fontFamily:"'DM Sans',sans-serif"}}>{camp.name}</div>
                         <div style={{fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>{camp.dates} · {camp.cost}</div>
                       </div>
-                      <button onClick={()=>exportToICal(camp)} style={{...S.btn(false),fontSize:11,padding:"5px 10px",borderRadius:8,flexShrink:0}}>📅 iCal</button>
+                      <button onClick={()=>exportToICal(camp)} style={{...S.btn(false),fontSize:11,padding:"5px 10px",borderRadius:8,flexShrink:0}}>📅 Google Cal</button>
                       <button onClick={()=>onToggleSave(camp)} style={{fontSize:11,padding:"5px 10px",borderRadius:8,border:"none",background:"#FFE4E6",color:"#9F1239",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>✕</button>
                     </div>
                   );
@@ -316,7 +322,7 @@ const FavoritesModal = ({savedCamps,onToggleSave,onClose}) => {
                 🔗 Share My Favorites List
               </button>
               <button onClick={()=>exportAllToICal(savedCamps)} style={{...S.btn(false),width:"100%",padding:"13px 0",borderRadius:12,fontSize:13}}>
-                📅 Export All to Calendar
+                📅 Add All to Google Calendar
               </button>
               <p style={{margin:"8px 0 0",fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif",textAlign:"center"}}>Share your list with friends or export to Google Calendar, Apple Calendar & Outlook</p>
             </>
@@ -512,7 +518,7 @@ const CampCard = ({camp,highlighted,saved,comparing,onAddReview,onToggleSave,onS
               {camp.extras&&<p style={{margin:0}}><strong style={{color:"#2D1A08"}}>Extras:</strong> {camp.extras}</p>}
             </div>
             <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-              <button onClick={()=>exportToICal(camp)} style={{...S.btn(false),fontSize:12,padding:"8px 14px",borderRadius:10}}>📅 Export to Calendar</button>
+              <button onClick={()=>exportToICal(camp)} style={{...S.btn(false),fontSize:12,padding:"8px 14px",borderRadius:10}}>📅 Add to Google Calendar</button>
               <button onClick={()=>onShowAlert(camp)} style={{...S.btn(camp.registrationOpen,"#059669"),fontSize:12,padding:"8px 14px",borderRadius:10}}>
                 {camp.registrationOpen?"🟢 Register Now":"🔔 Alert Me When Open"}
               </button>
