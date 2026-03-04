@@ -476,7 +476,7 @@ const CampCard = ({camp,highlighted,saved,comparing,onAddReview,onToggleSave,onS
               ⭐ Review
             </button>
             <button onClick={()=>onShowAlert(camp)} style={{...S.btn(false),padding:"9px 10px",borderRadius:10,fontSize:13,flexShrink:0}} title="Registration alert">🔔</button>
-            <button onClick={()=>onToggleSave(camp)} style={{padding:"9px 10px",borderRadius:10,border:`1.5px solid #E8D5A0`,fontSize:14,cursor:"pointer",background:saved?BLUE_LIGHT:"white",flexShrink:0,transition:"all 0.15s"}} title={saved?"Remove from favorites":"Save to favorites"}>
+            <button onClick={()=>onToggleSave(camp)} style={{padding:"9px 10px",borderRadius:10,border:`1.5px solid #E8D5A0`,fontSize:14,cursor:"pointer",background:saved?"#FFE4E6":"white",border:saved?`1.5px solid #FCA5A5`:"1.5px solid #E8D5A0",flexShrink:0,transition:"all 0.15s"}} title={saved?"Remove from favorites":"Save to favorites"}>
               {saved?"❤️":"🤍"}
             </button>
             <button onClick={()=>onToggleCompare(camp)} style={{padding:"9px 10px",borderRadius:10,border:`1.5px solid #E8D5A0`,fontSize:13,cursor:"pointer",background:comparing?BLUE_LIGHT:"white",flexShrink:0,transition:"all 0.15s",fontWeight:700,color:comparing?BLUE_DARK:"#92600A"}} title={comparing?"Remove from compare":"Compare this camp"}>
