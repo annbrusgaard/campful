@@ -84,7 +84,7 @@ const SKY = "#FFFBF0";
 const TYPES = ["All","Sports","Arts","STEM","Outdoor","Academic","Dance","Music","Life Skills & Character","Inclusive"];
 const AGES  = ["All Ages","4-6","7-9","10-12","13-15","16+"];
 const COSTS = ["Any Cost","Free","Under $200/wk","$200-$400/wk","$400-$600/wk","$600+/wk"];
-const TIMES = ["Any Schedule","Full Day (8h+)","Half Day","Extended Care","Before Care","After Care","Single Day OK","Lunch Provided","Snacks Provided"];
+const TIMES = ["Any Schedule","Full Day (8h+)","Half Day","Extended Care","Before Care","After Care","Single Day OK"];
 
 const TYPE_STYLE = {
   Sports:  {bg:"#DBEAFE",fg:"#1E40AF",dot:"#3B82F6"},
@@ -195,8 +195,6 @@ const timeMatch = (c,f) => {
   if(f==="Fall Break") return c.fallBreak;
   if(f==="Winter Break") return c.winterBreak;
   if(f==="Single Day OK") return c.singleDay;
-  if(f==="Lunch Provided") return c.lunch;
-  if(f==="Snacks Provided") return c.snacks;
   if(f==="Full Day (8h+)") return /7am|7:30|8am|full/i.test(c.schedule||"");
   if(f==="Half Day") return /12pm|half|noon/i.test(c.schedule||"");
   return true;
@@ -909,6 +907,7 @@ export default function Campful() {
   const [ageFilter,setAgeFilter]=useState("All Ages");
   const [costFilter,setCostFilter]=useState("Any Cost");
   const [timeFilter,setTimeFilter]=useState("Any Schedule");
+  const [foodFilter,setFoodFilter]=useState([]);
   const [seasonFilter,setSeasonFilter]=useState("Summer");
   const [sortBy,setSortBy]=useState("featured");
   const [view,setView]=useState("list");
@@ -942,6 +941,7 @@ export default function Campful() {
     return (!q||[c.name,c.desc,c.type,c.address,c.org].some(s=>(s||"").toLowerCase().includes(q)))
       &&(typeFilter==="All"||(typeFilter==="Inclusive"?c.inclusive:c.type===typeFilter))
       &&ageMatch(c.ages,ageFilter)&&parseCost(c.cost,costFilter)&&timeMatch(c,timeFilter)
+      &&(foodFilter.length===0||(foodFilter.includes("Lunch")?(c.lunch||false):true)&&(foodFilter.includes("Snacks")?(c.snacks||false):true))
       &&(!zipCoords||!c.lat||distMiles(zipCoords.lat,zipCoords.lng,c.lat,c.lng)<=parseFloat(radius))
       &&(seasonFilter==="Summer"||(seasonFilter==="Spring Break"&&c.springBreak)||(seasonFilter==="Fall Break"&&c.fallBreak)||(seasonFilter==="Winter Break"&&c.winterBreak));
   }).sort((a,b)=>{
