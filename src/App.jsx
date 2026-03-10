@@ -1093,6 +1093,18 @@ export default function Campful() {
               )}
             </div>
           </div>
+          <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:4}}>
+            <span style={{fontSize:10,fontWeight:700,color:"#92600A",letterSpacing:"0.06em",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>FOOD</span>
+            {["Lunch","Snacks"].map(f=>{
+              const active=foodFilter.includes(f);
+              return <button key={f} onClick={()=>setFoodFilter(prev=>active?prev.filter(x=>x!==f):[...prev,f])}
+                style={{fontSize:12,fontWeight:600,padding:"5px 14px",borderRadius:20,border:active?"2px solid #9A3412":"2px solid #E5E7EB",
+                background:active?"#FFF7ED":"#fff",color:active?"#9A3412":"#6B7280",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",
+                display:"flex",alignItems:"center",gap:4}}>
+                {f==="Lunch"?"🍽️":"🍎"} {f}
+              </button>;
+            })}
+          </div>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
             <div style={{display:"flex",alignItems:"center",gap:6}}>
               <span style={{fontSize:10,fontWeight:700,color:"#92600A",letterSpacing:"0.06em",fontFamily:"'DM Sans',sans-serif"}}>SORT:</span>
