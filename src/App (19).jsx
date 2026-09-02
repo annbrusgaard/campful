@@ -1,0 +1,1296 @@
+import { useState, useEffect, useRef } from "react";
+
+const fontLink = document.createElement("link");
+fontLink.rel = "stylesheet";
+fontLink.href = "https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap";
+document.head.appendChild(fontLink);
+
+const globalStyle = document.createElement("style");
+globalStyle.textContent = `
+  * { box-sizing: border-box; }
+  body { margin: 0; -webkit-font-smoothing: antialiased; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .camp-card {
+    background: white;
+    border-radius: 20px;
+    border: 1.5px solid #E8D5A0;
+    overflow: hidden;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+    animation: fadeUp 0.4s ease both;
+    will-change: transform;
+  }
+  .camp-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 18px 44px rgba(146,64,14,0.15) !important;
+  }
+  .camp-card.highlighted {
+    border-color: #D97706;
+    box-shadow: 0 0 0 3px rgba(217,119,6,0.2);
+  }
+
+  .heart-btn {
+    font-size: 17px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    border: 1.5px solid #E8D5A0;
+    background: white;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), background 0.15s, border-color 0.15s;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .heart-btn.saved {
+    background: #FFE4E6;
+    border-color: #FCA5A5;
+  }
+  .heart-btn:hover { transform: scale(1.2); }
+  .heart-btn:active { transform: scale(0.9); }
+
+  .season-btn {
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.15s !important;
+  }
+  .season-btn:hover { transform: translateY(-2px) !important; }
+  .season-btn:active { transform: scale(0.96) !important; }
+
+  .header-action-btn {
+    transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), opacity 0.15s !important;
+  }
+  .header-action-btn:hover { transform: translateY(-1px) !important; opacity: 0.92; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .camp-card { animation: none !important; }
+    * { transition-duration: 0.01ms !important; }
+  }
+
+  @media (max-width: 640px) {
+    .camp-grid { grid-template-columns: 1fr !important; }
+    .header-top-row { flex-direction: column !important; align-items: flex-start !important; }
+    .header-btns { flex-wrap: wrap !important; gap: 6px !important; }
+    .header-btns button { font-size: 11px !important; padding: 7px 10px !important; }
+    .card-info-grid { grid-template-columns: 1fr !important; }
+  }
+`;
+document.head.appendChild(globalStyle);
+
+const BLUE = "#D97706";
+const BLUE_DARK = "#92400E";
+const BLUE_LIGHT = "#FEF3C7";
+const SKY = "#FFFBF0";
+
+const TYPES = ["All","Sports","Arts","STEM","Outdoor","Academic","Dance","Music","Life Skills & Character","Inclusive"];
+const AGES  = ["All Ages","4-6","7-9","10-12","13-15","16+"];
+const COSTS = ["Any Cost","Free","Under $200/wk","$200-$400/wk","$400-$600/wk","$600+/wk"];
+const TIMES = ["Any Schedule","Full Day (8h+)","Half Day","Extended Care","Before Care","After Care","Single Day OK"];
+
+const SEASONS = ["Summer","Spring Break","Fall Break","Winter Break"];
+
+// Fall break lands on different weeks depending on the district, so camps are
+// tagged by week rather than a single yes/no flag.
+const FALL_WEEKS = [
+  {key:"w1", label:"Sep 28 – Oct 2", who:"Phoenix Country Day (partial)"},
+  {key:"w2", label:"Oct 5 – 9",      who:"Phoenix Union, Phoenix Elementary"},
+  {key:"w3", label:"Oct 12 – 16",    who:"Scottsdale Unified"},
+];
+
+const SEASON_COPY = {
+  "Summer":       {tag:"Summer, sorted. By parents, for parents.",      foot:"Phoenix & Scottsdale summer camps",       utm:"phoenix-summer-camps",       empty:"summer camps"},
+  "Spring Break": {tag:"Spring break, sorted. By parents, for parents.",foot:"Phoenix & Scottsdale spring break camps", utm:"phoenix-spring-break-camps", empty:"spring break camps"},
+  "Fall Break":   {tag:"Fall break, sorted. By parents, for parents.",  foot:"Phoenix & Scottsdale fall break camps",   utm:"phoenix-fall-break-camps",   empty:"fall break camps"},
+  "Winter Break": {tag:"Winter break, sorted. By parents, for parents.",foot:"Phoenix & Scottsdale winter break camps", utm:"phoenix-winter-break-camps", empty:"winter break camps"},
+};
+
+const TYPE_STYLE = {
+  Sports:  {bg:"#DBEAFE",fg:"#1E40AF",dot:"#3B82F6"},
+  Arts:    {bg:"#FCE7F3",fg:"#9D174D",dot:"#EC4899"},
+  STEM:    {bg:"#EDE9FE",fg:"#5B21B6",dot:"#8B5CF6"},
+  Outdoor: {bg:"#D1FAE5",fg:"#065F46",dot:"#10B981"},
+  Academic:{bg:"#E0E7FF",fg:"#3730A3",dot:"#6366F1"},
+  Dance:   {bg:"#FFE4E6",fg:"#9F1239",dot:"#F43F5E"},
+  Music:       {bg:"#CCFBF1",fg:"#134E4A",dot:"#14B8A6"},
+  "Life Skills & Character":{bg:"#FEF9C3",fg:"#854D0E",dot:"#EAB308"},
+  Inclusive:   {bg:"#F5F3FF",fg:"#5B21B6",dot:"#8B5CF6"},
+};
+
+const CAMPS = [
+  {id:1,name:"Arizona Science Center Camp",sponsored:false,org:"Arizona Science Center",type:"STEM",ages:"5-14",cost:"$250/wk",costNum:250,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"600 E Washington St, Phoenix, AZ 85004",lat:33.4484,lng:-112.0669,desc:"Hands-on STEM camps with themed weeks including robotics, chemistry, and space exploration. All skill levels welcome.",schedule:"Mon–Fri, 9am–3pm",web:"https://azscience.org",phone:"(602) 716-2000",extras:"Scholarships available. Members save $50/wk.",extCare:true,beforeCare:true,afterCare:true,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:true,springBreak:true,singleDay:false,featured:true,registrationOpen:true,reviews:[]},
+  {id:2,name:"Code Ninjas Camp",org:"Code Ninjas",type:"STEM",ages:"7-14",cost:"$350/wk",costNum:350,dates:"June 9 – Aug 8",startDate:"2025-06-09",endDate:"2025-08-08",address:"3902 E Thomas Rd, Phoenix, AZ 85018",lat:33.4794,lng:-111.9990,desc:"Kids build their own video games using Scratch, JavaScript, and Roblox Studio in a fun ninja-themed environment.",schedule:"Mon–Fri, 9am–3pm",web:"https://codeninjas.com",phone:"(602) 429-0011",extras:"All skill levels. Ahwatukee, Chandler, Paradise Valley & Scottsdale locations.",extCare:false,beforeCare:false,afterCare:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:true,springBreak:true,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:3,name:"iCode Camp",org:"iCode School",type:"STEM",ages:"6-18",cost:"$399/wk",costNum:399,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"8465 E Hartford Dr, Scottsdale, AZ 85255",lat:33.6512,lng:-111.9000,desc:"Coding, drones, game design, AI, 3D printing, and filmmaking camps for every level. Gamified learning that keeps kids engaged.",schedule:"Mon–Fri, 9am–3pm",web:"https://icodeschool.com",phone:"(480) 809-9429",extras:"ESA approved. Scottsdale, Chandler & Peoria locations.",extCare:false,beforeCare:false,afterCare:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:true,springBreak:true,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:4,name:"Engineering For Kids Camp",org:"Engineering For Kids Phoenix Metro",type:"STEM",ages:"4-14",cost:"$299/wk",costNum:299,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Multiple Phoenix Metro locations",lat:33.5200,lng:-111.9800,desc:"Kids design, build, test and improve real engineering projects while developing teamwork skills.",schedule:"Mon–Fri, 9am–3pm",web:"https://engineeringforkids.com/phoenix-metro",phone:"(602) 888-0349",extras:"Locations at Slick City Chandler and Sky Zone in Scottsdale & Chandler.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:5,name:"Mad Science Summer Camp",org:"Mad Science of Arizona",type:"STEM",ages:"5-12",cost:"$275/wk",costNum:275,dates:"June 3 – July 18",startDate:"2025-06-03",endDate:"2025-07-18",address:"Multiple Maricopa County locations",lat:33.4800,lng:-112.0700,desc:"Campers become detectives, engineers and scientists through weekly themed experiments. Owl pellet dissections, bridges, crime scenes and more.",schedule:"Mon–Fri, 9am–12pm or 1pm–4pm",web:"https://madscience.org/arizona",extras:"Different subject every week. Various Valley locations.",extCare:false,beforeCare:false,afterCare:false,springBreak:true,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:6,name:"Ninja Nation Camp",org:"Ninja Nation",type:"Sports",ages:"5-12",cost:"$299/wk",costNum:299,dates:"May 26 – Aug 1",startDate:"2025-05-26",endDate:"2025-08-01",address:"15449 N Hayden Rd, Scottsdale, AZ 85260",lat:33.6300,lng:-111.9100,desc:"Full-day ninja obstacle course camp with classes, open gym time, team building and competitions. The ultimate day of fun and fitness.",schedule:"Mon–Fri, 8:30am–3:30pm",web:"https://ninjanationcamp.com",extras:"Glendale location also available.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  {id:7,name:"Phoenix Parks Summer Camp",org:"City of Phoenix Parks & Recreation",type:"Outdoor",ages:"6-13",cost:"$60/wk",costNum:60,dates:"June 9 – July 25",startDate:"2025-06-09",endDate:"2025-07-25",address:"Multiple Phoenix Park locations",lat:33.4651,lng:-112.0794,desc:"Affordable city-run camps with outdoor activities, sports, arts & crafts, and field trips throughout Phoenix neighborhoods.",schedule:"Mon–Fri, 7:30am–5:30pm",web:"https://phoenix.gov/parks",phone:"(602) 262-6861",extras:"Financial assistance available. Most affordable option in Phoenix.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:true,registrationOpen:true,reviews:[]},
+  {id:8,name:"YMCA Day Camp",org:"Valley of the Sun YMCA",type:"Outdoor",ages:"5-15",cost:"$175/wk",costNum:175,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Multiple YMCA locations across the Valley",lat:33.5092,lng:-112.1268,desc:"Classic day camp with swimming, sports, field trips, and character-building activities. 31 locations across the Valley.",schedule:"Mon–Fri, 7am–6pm",web:"https://valleyofthesunymca.org",phone:"(602) 264-9011",extras:"Swim lessons included. Financial assistance available.",extCare:true,beforeCare:true,afterCare:true,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:true,springBreak:true,singleDay:false,featured:true,registrationOpen:true,reviews:[]},
+  {id:9,name:"Camp Zoo",org:"Phoenix Zoo",type:"Outdoor",ages:"5-13",cost:"$350/wk",costNum:350,dates:"June 2 – July 28",startDate:"2025-06-02",endDate:"2025-07-28",address:"455 N Galvin Pkwy, Phoenix, AZ 85008",lat:33.4494,lng:-111.9468,desc:"Animal encounters, games, science experiments and conservation activities straight from Phoenix Zoo specialists.",schedule:"Mon–Fri, 8am–3pm",web:"https://phoenixzoo.org/camps",phone:"(602) 914-4333",extras:"Fall program is Nature Explorers Fall Camp, aimed at 3rd and 4th graders. Limited spots — register early.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:true,registrationOpen:true,reviews:[]},
+  {id:10,name:"Desert Botanical Garden Discovery Camp",org:"Desert Botanical Garden",type:"Outdoor",ages:"6-12",cost:"$310/wk",costNum:310,dates:"June 2 – July 18",startDate:"2025-06-02",endDate:"2025-07-18",address:"1201 N Galvin Pkwy, Phoenix, AZ 85008",lat:33.4614,lng:-111.9446,desc:"Explore the beauty of the Sonoran Desert through outdoor skills, nature-inspired art, sustainability, and science.",schedule:"Mon–Fri, 8am–12pm",web:"https://dbg.org",phone:"(480) 941-1225",extras:"All activities included with camp fee.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:11,name:"Cactus Day Camp",org:"Cactus Day Camp",type:"Outdoor",ages:"4-13",cost:"$425/wk",costNum:425,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Cave Creek area, Phoenix Metro",lat:33.8300,lng:-112.0000,desc:"ACA-accredited traditional day camp inspiring active, unplugged lifestyles in the beautiful Arizona desert.",schedule:"Mon–Fri, 7am–5:30pm",web:"https://cactusdaycamp.com",extras:"American Camp Association accredited. Sibling discounts available.",extCare:true,beforeCare:true,afterCare:true,fallBreak:false,winterBreak:false,springBreak:true,singleDay:false,featured:true,registrationOpen:true,reviews:[]},
+  {id:12,name:"Camp Colley Outdoor Adventure",inclusive:true,org:"City of Phoenix Parks",type:"Outdoor",ages:"7-17",cost:"$500/wk",costNum:500,dates:"June 9 – July 25",startDate:"2025-06-09",endDate:"2025-07-25",address:"Happy Jack, AZ (Mogollon Rim)",lat:34.2800,lng:-111.3200,desc:"30-acre outdoor adventure camp on the Mogollon Rim. Nature education, hiking, leadership skills, and lifelong friendships away from the Phoenix heat.",schedule:"Mon–Fri, overnight sessions",web:"https://phoenix.gov/parks",extras:"Teen Leadership CIT program ages 16-17. Inclusive for neurodiverse youth.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:13,name:"Phoenix Herpetological Sanctuary Camp",org:"Phoenix Herpetological Sanctuary",type:"Outdoor",ages:"6-14",cost:"$350/wk",costNum:350,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Near Scottsdale Rd & Dynamite, Scottsdale",lat:33.7200,lng:-111.9100,desc:"Passionate reptile and amphibian conservation camp. Kids get up-close encounters with native and exotic species.",schedule:"Full day and half day options. Before and after care available.",web:"https://phoenixherp.com",phone:"(480) 513-4377",extras:"Address provided after registration. 3 age groups: Neonate, Junior, Advanced.",extCare:false,beforeCare:true,afterCare:true,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:14,name:"Camps for Kids AZ",org:"Camps for Kids",type:"Outdoor",ages:"5-17",cost:"$399/wk",costNum:399,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"2136 W Chandler Blvd, Chandler + Valley locations",lat:33.5500,lng:-112.1000,desc:"Arizona's most active themed camps — Animal, Water, LEGO, Cosmic Glow, and Gaming camps. Overnight options also available.",schedule:"Mon–Fri, 7am–6pm",web:"https://summercampaz.com",extras:"Day and overnight options. Wildly popular — book early!",extCare:true,beforeCare:true,afterCare:true,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:true,springBreak:true,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:15,name:"Children's Museum of Phoenix Camp",org:"Children's Museum of Phoenix",type:"Arts",ages:"5-8",cost:"$345/wk",costNum:345,dates:"May 26 – July 31",startDate:"2025-05-26",endDate:"2025-07-31",address:"215 N 7th St, Phoenix, AZ 85034",lat:33.4530,lng:-112.0600,desc:"Award-winning themed weekly camps covering nature, science, teamwork, and creativity. Explore three floors of imaginative exhibits.",schedule:"Mon–Fri, 9am–4pm. Early care 8am, after care to 5:30pm.",web:"https://childrensmuseumofphoenix.org",phone:"(602) 253-0501",extras:"Fall break enrollment opened Labor Day. Extended care $100/wk. Member discount available. Scholarships offered.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:true,fallWeeks:["w1","w2","w3"],fallDates:"Sep 28–Oct 2 · Oct 5–9 · Oct 12–16",fallConfirmed:true,fallStart:"2026-09-28",fallEnd:"2026-10-16",winterBreak:false,singleDay:false,featured:true,registrationOpen:true,reviews:[]},
+  {id:16,name:"Phoenix Youth Circus Arts Camp",org:"Phoenix Youth Circus",type:"Arts",ages:"7-16",cost:"$350/wk",costNum:350,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"330 N 16th Ave, Phoenix, AZ 85007",lat:33.4590,lng:-112.0930,desc:"Learn stilt-walking, unicycling, juggling, trapeze, aerial silks, acrobatics and clowning from experienced teaching artists.",schedule:"Mon–Fri, 9am–4pm",web:"https://phxyouthcircus.org",extras:"Groups of 8 or less. Family showcase each Friday.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:17,name:"Desert Foothills Theater Camp",org:"Desert Foothills Theater",type:"Arts",ages:"4-17",cost:"$280/wk",costNum:280,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Two Valley locations",lat:33.8000,lng:-111.9500,desc:"Acting, dancing, music, crafts and dance parties in a supportive creative environment. 12 fun sessions across two locations.",schedule:"Mon–Fri, 9am–3pm",web:"https://dftheater.org",extras:"Two locations. One of the most popular theater camps in the Valley.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:18,name:"Scottsdale Desert Stages Theatre Camp",org:"Desert Stages Theatre",type:"Arts",ages:"4-18",cost:"$345/wk",costNum:345,dates:"June 2 – July 25",startDate:"2025-06-02",endDate:"2025-07-25",address:"7014 E Camelback Rd, Scottsdale, AZ 85251",lat:33.5028,lng:-111.9261,desc:"Award-winning non-profit performing arts theatre camp. Acting, singing, and dancing in Scottsdale Fashion Square.",schedule:"Mon–Fri, 9am–3pm",web:"https://desertstages.org",phone:"(480) 348-0110",extras:"Professional instruction. Family showcase at end of session.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:19,name:"BE KIND Camp",org:"The BE KIND People Project",type:"Life Skills & Character",ages:"5-14",cost:"$200/wk",costNum:200,dates:"June 2 – June 26",startDate:"2025-06-02",endDate:"2025-06-26",address:"731 Grand Ave, Phoenix, AZ 85007",lat:33.4620,lng:-112.0820,desc:"Unique character-building camps centered on kindness, leadership, and responsibility. Dance, video creation, visual arts, and community service.",schedule:"Mon–Thu, 9am–3:30pm",web:"https://thebekindpeopleproject.org/summer-camps",phone:"(602) 559-9399",extras:"Before/after care +$80/wk. Spots fill fast — register early.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:20,name:"Saint Barnabas Arts Camp",org:"Saint Barnabas Episcopal Church",type:"Arts",ages:"5-15",cost:"$150/wk",costNum:150,dates:"June 9 – July 11",startDate:"2025-06-09",endDate:"2025-07-11",address:"Phoenix, AZ",lat:33.5100,lng:-112.0400,desc:"Affordable fine arts camp exploring visual arts, music, drama, and creativity in a welcoming community environment.",schedule:"Mon–Fri, 9am–noon",extras:"One of the most affordable arts camps in Phoenix.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:21,name:"Phoenix Suns Basketball Camp",org:"Phoenix Suns",type:"Sports",ages:"6-17",cost:"$299/wk",costNum:299,dates:"June 2 – June 27",startDate:"2025-06-02",endDate:"2025-06-27",address:"Multiple Valley locations",lat:33.4457,lng:-112.0712,desc:"Official Suns camp with professional coaching, drills, skills sessions and scrimmages. Four locations across the Valley.",schedule:"Mon–Fri, 9am–3pm",web:"https://suns.com/camps",extras:"4 sessions at different Valley locations. Jersey included.",extCare:false,beforeCare:false,afterCare:false,fallBreak:false,winterBreak:false,springBreak:false,singleDay:false,featured:true,registrationOpen:true,reviews:[]},
+  {id:22,name:"Challenger Sports Soccer Camp",org:"Challenger Sports",type:"Sports",ages:"3-14",cost:"$180/wk",costNum:180,dates:"June 9 – Aug 1",startDate:"2025-06-09",endDate:"2025-08-01",address:"Various Phoenix area fields",lat:33.5722,lng:-112.0893,desc:"North America's largest soccer camp provider with 30+ years of experience. International coaching staff with fun, skills-focused training.",schedule:"Mon–Fri, 9am–12pm or 2pm–5pm",web:"https://challengersports.com",extras:"Ball + backpack included. All ability levels.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:23,name:"Impact Gymnastics Camp",org:"Impact Gymnastics Academy",type:"Sports",ages:"4-14",cost:"$300/wk",costNum:300,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"7812 N 12th St, Phoenix, AZ 85020",lat:33.5810,lng:-112.0630,desc:"Full and half-day gymnastics camps with tumbling, trampoline, obstacle courses, team sports and relay races.",schedule:"Mon–Fri, 9am–3pm (full) or 9am–noon (half)",web:"https://impactgymaz.com",phone:"(602) 870-7574",extras:"Full day $400/wk or $85/day. Half day $300/wk or $65/day.",extCare:false,beforeCare:false,afterCare:false,springBreak:true,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  {id:24,name:"Xtreme Gymnastics Fit-n-Fun Camp",org:"Xtreme Gymnastics",type:"Sports",ages:"3-12",cost:"$78/wk",costNum:78,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"14000 N Hayden Rd, Scottsdale, AZ 85260",lat:33.6310,lng:-111.9080,desc:"Gymnastics, trampolining, obstacle courses, team sports, relay races and inflatables promoting health and fitness.",schedule:"Multiple daily session times",web:"https://xtremegymnastics.com",extras:"Prices start at $78. Flexible schedules and rates. One of the most affordable sports camps.",extCare:false,beforeCare:false,afterCare:false,springBreak:true,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  {id:25,name:"Rancho Solano Summer Camp",org:"Rancho Solano Preparatory School",type:"Sports",ages:"3-12",cost:"$375/wk",costNum:375,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"9180 E Via de Ventura, Scottsdale, AZ 85258",lat:33.5600,lng:-111.8900,desc:"Award-winning day camp with daily swimming included. Drone racing, STEM, arts, sports, Roblox, Minecraft and more.",schedule:"Mon–Fri, 7:30am–5:30pm",web:"https://ranchosummercamps.com",extras:"Swimming, extended care and snack ALL included. PreK–8th grade.",extCare:true,beforeCare:true,afterCare:true,springBreak:true,fallBreak:false,winterBreak:false,singleDay:false,featured:true,registrationOpen:true,snacks:true,reviews:[]},
+  {id:26,name:"Paradise Valley Karate Camp",org:"Paradise Valley School of Karate",type:"Sports",ages:"5-14",cost:"$199/wk",costNum:199,dates:"May 27 – Aug 1",startDate:"2025-05-27",endDate:"2025-08-01",address:"Paradise Valley, AZ",lat:33.5400,lng:-111.9600,desc:"Martial arts camp teaching discipline, focus, respect, and confidence through fun age-appropriate instruction.",schedule:"Mon–Fri, 9am–3pm",extras:"Beginner-friendly. Character development focus.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:27,name:"Valley Youth Theatre Summer Camp",org:"Valley Youth Theatre",type:"Music",ages:"6-18",cost:"$375/wk",costNum:375,dates:"June 2 – July 25",startDate:"2025-06-02",endDate:"2025-07-25",address:"525 N 1st St, Phoenix, AZ 85004",lat:33.4523,lng:-112.0707,desc:"Professional musical theatre training in voice, movement, and acting. Campers perform in a full production at end of session.",schedule:"Mon–Fri, 9am–3pm",web:"https://vyt.com",phone:"(602) 253-8188",extras:"Scholarships available. Notable alumni include Emma Stone.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:true,registrationOpen:false,reviews:[]},
+  {id:28,name:"Phoenix Theatre Children's Camp",org:"Phoenix Theatre Company",type:"Arts",ages:"8-17",cost:"$425/wk",costNum:425,dates:"June 23 – July 11",startDate:"2025-06-23",endDate:"2025-07-11",address:"1825 N Central Ave, Phoenix, AZ 85004",lat:33.4793,lng:-112.0740,desc:"Professional theater training in acting, singing, and dance led by Phoenix Theatre Company artists.",schedule:"Mon–Fri, 9am–4pm",web:"https://phoenixtheatre.com",extras:"Costumes provided. Professional-grade instruction.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:false,reviews:[]},
+  {id:29,name:"YMCA Dance & Cheer Camp",org:"Valley of the Sun YMCA",type:"Dance",ages:"5-14",cost:"$190/wk",costNum:190,dates:"June 9 – July 25",startDate:"2025-06-09",endDate:"2025-07-25",address:"Multiple YMCA locations",lat:33.4901,lng:-112.1100,desc:"High-energy dance and cheer covering hip-hop, jazz, pom, and cheerleading. Week ends with a family performance.",schedule:"Mon–Fri, 9am–12pm",web:"https://valleyofthesunymca.org",extras:"Before/after care available at many locations.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,lunch:true,snacks:true,reviews:[]},
+  {id:30,name:"Boys & Girls Club Camp",org:"Boys & Girls Clubs of the Valley",type:"Life Skills & Character",ages:"5-18",cost:"$50/wk",costNum:50,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"31 locations across the Valley",lat:33.4700,lng:-112.0500,desc:"Affordable, enriching programs covering arts, sciences, and sports. Healthy breakfast, snacks, and lunch included.",schedule:"Mon–Fri, 6am–6pm",web:"https://bgcaz.org/summer-camp",phone:"(602) 433-2490",extras:"Meals included! One of the best-value camps in the Valley. 31 locations.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:true,registrationOpen:true,lunch:true,snacks:true,reviews:[]},
+  {id:31,name:"Boys & Girls Clubs of Greater Scottsdale",org:"Boys & Girls Clubs of Greater Scottsdale",type:"Life Skills & Character",ages:"5-18",cost:"$60/wk",costNum:60,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"4 Scottsdale/Phoenix locations",lat:33.5800,lng:-111.9200,desc:"Arts, sciences and sports programs in a safe, supportive environment. Leadership and career-building experiences for teens.",schedule:"Mon–Fri, 7am–6pm",web:"https://bgcs.org",phone:"(480) 344-5520",extras:"4 locations: Ridgeline, Thunderbirds, Virginia Piper, Vestar branches.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,lunch:true,snacks:true,reviews:[]},
+  {id:32,name:"Deer Valley USD Sunsational Camps",org:"Deer Valley Unified School District",type:"Academic",ages:"4-14",cost:"$115/wk",costNum:115,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"Multiple DVUSD schools, Peoria/Phoenix",lat:33.6800,lng:-112.1500,desc:"Wide variety of camps including sports, arts, music, STEM, theater, and field trips. STEAM projects and Science Center field trips included.",schedule:"Mon–Fri, 6am–6pm",web:"https://dvusd.org/summerprograms",extras:"$115 for 3 days or $185 for 5 days. Breakfast, snacks and lunch included.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,lunch:true,snacks:true,reviews:[]},
+  {id:33,name:"Summit School Summer Camp",org:"Summit School of Ahwatukee",type:"Academic",ages:"4-12",cost:"$250/wk",costNum:250,dates:"May 27 – July 3",startDate:"2025-05-27",endDate:"2025-07-03",address:"4515 E Muirwood Dr, Phoenix, AZ 85048",lat:33.3100,lng:-112.0000,desc:"Six weeks of fun themed camps: Science, Dino, Under the Sea, Pirate, Camp Olympics, and LEGO. Creative hands-on learning.",schedule:"Mon–Fri, 7am–6pm",web:"https://summitschoolaz.org/summer-camps",phone:"(480) 403-9500",extras:"Open to all students, not just Summit enrollees.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:34,name:"Peoria Parks Summer Camp",org:"City of Peoria Parks & Recreation",type:"Outdoor",ages:"5-12",cost:"$185/wk",costNum:185,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"Multiple Peoria park locations",lat:33.5806,lng:-112.2374,desc:"STEAM projects, daily field trips to the Arizona Science Center, arts, and sports. A well-rounded affordable camp program.",schedule:"Mon–Fri, 6am–6pm",web:"https://peoriaaz.gov",extras:"$115 for 3 days or $185 for 5 days. Meals included.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,lunch:true,reviews:[]},
+  {id:35,name:"ASU Summer Camp Programs",org:"Arizona State University",type:"Academic",ages:"8-17",cost:"$400/wk",costNum:400,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"13590 N 47th Ave, Phoenix, AZ 85029",lat:33.6100,lng:-112.1400,desc:"University-level hands-on STEM and enrichment camps on ASU West Valley campus. Eight themed camps with critical thinking and project-based learning.",schedule:"Mon–Fri, 9am–4pm",web:"https://asu.edu/summercamp",extras:"Snacks and water provided. Parents view completed projects each week.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,snacks:true,reviews:[]},
+  {id:36,name:"Camp OCEAN at OdySea Aquarium",org:"OdySea Aquarium",type:"Outdoor",ages:"5-13",cost:"$375/wk",costNum:375,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"9500 E Via de Ventura, Scottsdale, AZ 85256",lat:33.5400,lng:-111.8900,desc:"Behind-the-scenes aquarium camp with animal encounters, marine biology lessons, and conservation activities.",schedule:"Mon–Fri, 9am–3pm",web:"https://odyseaaquarium.com/campocean",phone:"(480) 291-8193",extras:"Voted Best of the Valley Day Camp 2025. Very limited spots — book early!",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:true,registrationOpen:true,reviews:[]},
+  {id:37,name:"Camp Kroc",org:"The Salvation Army Kroc Center",type:"Outdoor",ages:"5-13",cost:"$220/wk",costNum:220,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"1375 E Broadway Rd, Phoenix, AZ 85040",lat:33.3960,lng:-112.0430,desc:"Action-packed camp with swimming, rock climbing, arts & crafts, cooking experiments, and sports. Week ends with a Splashtastic Pool Party!",schedule:"Mon–Fri, 7am–6pm",web:"https://krocphoenix.org/camp-kroc",phone:"(602) 425-5000",extras:"Breakfast and lunch included. Scholarships available (up to 50% off).",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,lunch:true,snacks:true,reviews:[]},
+  {id:38,name:"Shemesh Day Camp",org:"Valley of the Sun Jewish Community Center",type:"Outdoor",ages:"5-16",cost:"$375/wk",costNum:375,dates:"June 2 – July 25",startDate:"2025-06-02",endDate:"2025-07-25",address:"12701 N Scottsdale Rd, Scottsdale, AZ 85254",lat:33.6100,lng:-111.9200,desc:"ACA-accredited day camp with swim lessons, archery, sports, art, STEAM, and tween adventures.",schedule:"Mon–Fri, 7:30am–5:30pm",web:"https://valleyofthesunj.org/shemesh",phone:"(480) 634-4949",extras:"ACA accredited. All staff CPR/First Aid certified.",extCare:true,beforeCare:true,afterCare:true,springBreak:true,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:39,name:"Arizona Sunrays Camp",org:"Arizona Sunrays",type:"Sports",ages:"4-12",cost:"$290/wk",costNum:290,dates:"May 27 – Aug 8",startDate:"2025-05-27",endDate:"2025-08-08",address:"3 locations: Phoenix, Arcadia, Carefree",lat:33.6300,lng:-112.0000,desc:"Action-packed camp with ninja training, gymnastics, sports games, water play, obstacle courses, and creative crafts.",schedule:"Mon–Fri, 8am–3pm",web:"https://arizonasunrays.com",phone:"(602) 992-5790",extras:"Runs camps for spring, fall and winter break as well as summer. Extended care available.",extCare:true,beforeCare:false,afterCare:true,springBreak:true,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:true,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  {id:40,name:"APEX Sports Camp",org:"APEX Sports Camps",type:"Sports",ages:"6-14",cost:"$250/wk",costNum:250,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"4633 E Shea Blvd, Phoenix, AZ 85028",lat:33.5800,lng:-111.9800,desc:"22,000 sq ft climate-controlled sports facility with basketball, volleyball, pickleball, dodgeball, NERF football, and chess.",schedule:"Mon–Fri, 9am–3pm",extras:"Climate controlled — perfect for Phoenix summers. All sports equipment included.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  {id:41,name:"Orme Summer Camp",org:"Orme School",type:"Outdoor",ages:"12-17",cost:"$1100/wk",costNum:1100,dates:"July 13 – July 27",startDate:"2025-07-13",endDate:"2025-07-27",address:"1000 E Orme School Rd, Mayer, AZ 86333",lat:34.4100,lng:-112.3100,desc:"Teen adventure camp on a stunning historic campus with equestrian facilities, competition pool, gymnasium, and hiking trails.",schedule:"Overnight sessions July 13–19 (ages 12–14) and July 21–27 (ages 15–17)",web:"https://ormeschool.org",extras:"Horseback riding, hiking, swimming, and more.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:42,name:"McCormick Stillman Railroad Park Camp",org:"City of Scottsdale",type:"Outdoor",ages:"5-12",cost:"$195/wk",costNum:195,dates:"June 2 – July 25",startDate:"2025-06-02",endDate:"2025-07-25",address:"7301 E Indian Bend Rd, Scottsdale, AZ 85250",lat:33.5700,lng:-111.9200,desc:"Unique camp at Scottsdale's beloved railroad park. Train rides, outdoor science, crafts, and games.",schedule:"Mon–Fri, 8am–noon",web:"https://scottsdaleaz.gov/parks",extras:"Train rides included! One of Scottsdale's most unique camp experiences.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:43,name:"Childsplay Theatre Academy Camp",org:"Childsplay",type:"Arts",ages:"4-17",cost:"$340/wk",costNum:340,dates:"June 2 – July 25",startDate:"2025-06-02",endDate:"2025-07-25",address:"900 S Mitchell Dr, Tempe, AZ 85281",lat:33.4200,lng:-111.9400,desc:"Award-winning theatre camp led by professional artists. Creative drama, acting workshops, stage combat, and musical theatre.",schedule:"Mon–Fri, 9am–3pm",web:"https://childsplayaz.org/fallclasses",phone:"(480) 921-5700",extras:"Professional AEA actors as instructors. Tempe's premier youth theatre program.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:44,name:"Young Rembrandts Art Camp",org:"Young Rembrandts",type:"Arts",ages:"4-12",cost:"$199/wk",costNum:199,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Multiple East Valley locations",lat:33.4500,lng:-111.8500,desc:"Nationally recognized art education program teaching drawing, design, and creativity through a proven step-by-step curriculum.",schedule:"Mon–Fri, 9am–noon or 1pm–4pm",web:"https://youngrembrandts.com/az-east-valley",extras:"Multiple East Valley locations. Half-day format.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:45,name:"Art and Sol Performing Arts Camp",org:"Art and Sol",type:"Dance",ages:"5-15",cost:"$310/wk",costNum:310,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"Chandler, AZ 85225",lat:33.3062,lng:-111.8413,desc:"Performing arts camp blending acting, music, and dance for beginners and experienced performers alike.",schedule:"Mon–Fri, 9am–3pm",web:"https://artandsolaz.com",extras:"Great for first-timers and experienced performers. Family showcase at end of session.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:46,name:"Aspire Kids Sports Center Camp",org:"Aspire Kids Sports Center",type:"Sports",ages:"4-14",cost:"$320/wk",costNum:320,dates:"May 22 – Aug 8",startDate:"2025-05-22",endDate:"2025-08-08",address:"50 S Hearthstone Way, Chandler, AZ 85226",lat:33.3000,lng:-111.8800,desc:"Dynamic camps featuring gymnastics, swimming, dance, and more. Varied physical activities designed to promote fitness and fun.",schedule:"Mon–Fri, 8am–3pm",web:"https://aspirekidsports.com/kids-camps",phone:"(480) 820-3774",extras:"Gymnastics, swimming and dance all in one camp. Chandler location.",extCare:false,beforeCare:false,afterCare:false,springBreak:true,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  {id:47,name:"Tempe Parks Summer Camp",org:"City of Tempe Parks & Recreation",type:"Outdoor",ages:"6-13",cost:"$150/wk",costNum:150,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"Multiple Tempe park locations",lat:33.4255,lng:-111.9400,desc:"Affordable city-run camps with swimming, sports, arts, field trips and more. One of the best deals in the East Valley.",schedule:"Mon–Fri, 7am–6pm",web:"https://tempe.gov/parks",phone:"(480) 350-5200",extras:"Financial assistance available. Multiple park locations.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:48,name:"Gilbert Parks Summer Camp",org:"Town of Gilbert Parks & Recreation",type:"Outdoor",ages:"5-13",cost:"$170/wk",costNum:170,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"Multiple Gilbert locations",lat:33.3528,lng:-111.7890,desc:"Fun-filled camp days with swimming, sports, arts, field trips, and outdoor activities across Gilbert's beautiful park system.",schedule:"Mon–Fri, 6:30am–6pm",web:"https://gilbertaz.gov/parks",extras:"Gilbert residents get discounted rates.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:49,name:"Mesa Parks Break Camp",org:"City of Mesa Parks & Recreation",type:"Outdoor",ages:"6-13",cost:"$160/wk",costNum:160,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"Multiple Mesa park locations",lat:33.4152,lng:-111.8315,desc:"Classic day camp featuring swimming, sports, arts & crafts, field trips, and outdoor games. Runs school-break camps too.",schedule:"Mon–Fri, 7am–6pm",web:"https://mesaparks.com",phone:"(480) 644-7529",extras:"Mesa residents discounted. Multiple locations. Search 'break camp' on their registration site.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:50,name:"Chandler Parks Break Camp",org:"City of Chandler Parks & Recreation",type:"Outdoor",ages:"5-13",cost:"$175/wk",costNum:175,dates:"June 2 – Aug 1",startDate:"2025-06-02",endDate:"2025-08-01",address:"Chandler Nature Center, Community Center, Snedigar & Tumbleweed Rec Centers",lat:33.3062,lng:-111.8413,desc:"Day camps with swimming, sports, arts, and field trips. Well-run city program known for great counselors and safe facilities.",schedule:"Mon–Fri, 6:30am–6pm",web:"https://chandleraz.gov/explore/chandler-recreation/programs-and-activities/camps/fall",phone:"(480) 782-2912",extras:"Resident rates available. Dedicated fall camp page on the city site.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:51,name:"Scottsdale Parks Break Camp",org:"City of Scottsdale Parks & Recreation",type:"Outdoor",ages:"5-13",cost:"$200/wk",costNum:200,dates:"June 2 – July 25",startDate:"2025-06-02",endDate:"2025-07-25",address:"Multiple Scottsdale park locations",lat:33.4942,lng:-111.9261,desc:"Quality city-run camp with swimming, hiking, arts, sports, and field trips. Well-regarded program with experienced staff.",schedule:"Mon–Fri, 7am–5:30pm",web:"https://scottsdaleaz.gov/parks",phone:"(480) 312-7957",extras:"Scottsdale residents get priority registration. Fall break camps run through Leisure Education.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:52,name:"Peoria Sports Complex Baseball Camp",org:"Peoria Sports Complex",type:"Sports",ages:"7-16",cost:"$275/wk",costNum:275,dates:"June 9 – July 25",startDate:"2025-06-09",endDate:"2025-07-25",address:"16101 N 83rd Ave, Peoria, AZ 85382",lat:33.6200,lng:-112.2400,desc:"Train on the same fields as the MLB Padres and Mariners spring training facility. Professional instruction for all skill levels.",schedule:"Mon–Fri, 8am–noon",web:"https://peoriasportscomplex.com",extras:"Play on MLB spring training fields! All equipment provided.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:53,name:"Phoenix Mercury Basketball Camp",org:"Phoenix Mercury / Suns",type:"Sports",ages:"8-16",cost:"$275/wk",costNum:275,dates:"June 16 – June 27",startDate:"2025-06-16",endDate:"2025-06-27",address:"Phoenix Suns Arena / Valley locations",lat:33.4457,lng:-112.0712,desc:"Official Phoenix Mercury camp teaching fundamental basketball skills with professional coaching. Drills, scrimmages and player meet-and-greets.",schedule:"Mon–Fri, 9am–3pm",web:"https://mercury.wnba.com",extras:"Girls basketball focus. Meet WNBA players!",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:54,name:"AZ Coyotes Hockey Camp",org:"Arizona Coyotes",type:"Sports",ages:"5-18",cost:"$425/wk",costNum:425,dates:"June 9 – July 18",startDate:"2025-06-09",endDate:"2025-07-18",address:"Scottsdale Ice Den, 9375 E Bell Rd, Scottsdale, AZ 85260",lat:33.6400,lng:-111.8800,desc:"Official AZ Coyotes hockey development camps for all skill levels at Scottsdale Ice Den. Beat the Phoenix heat on the ice!",schedule:"Mon–Fri, varies by session",web:"https://coyotes.nhl.com/camps",extras:"Beat the Phoenix heat on the ice! All skill levels.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:55,name:"Phoenix Art Museum Junior Artists Camp",org:"Phoenix Art Museum",type:"Arts",ages:"6-14",cost:"$350/wk",costNum:350,dates:"June 9 – July 18",startDate:"2025-06-09",endDate:"2025-07-18",address:"1625 N Central Ave, Phoenix, AZ 85004",lat:33.4680,lng:-112.0740,desc:"Immersive art museum camp where kids explore world-class galleries and create their own works inspired by the permanent collection.",schedule:"Mon–Fri, 9am–3pm",web:"https://phxart.org",phone:"(602) 257-1222",extras:"Gallery access included. All materials provided. Member discounts.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  // === INCLUSIVE / ADAPTIVE ===
+  {id:56,name:"Lions Camp Tatiyee",org:"Lions Clubs of Arizona",type:"Outdoor",ages:"7+",cost:"Free",costNum:0,dates:"June – August (8 weekly sessions)",startDate:"2025-06-01",endDate:"2025-08-31",address:"5283 W White Mountain Blvd, Lakeside, AZ 85929",lat:34.1478,lng:-109.9834,desc:"Arizona's only completely free overnight camp for individuals with special needs. Week-long sessions for youth and adults with physical, intellectual, developmental, hearing, and vision disabilities. Rock climbing, archery, swimming, arts & crafts, and more — all fully ADA accessible.",schedule:"6-day / 5-night sessions, 8 sessions per summer",web:"https://camptatiyee.org",phone:"(480) 380-4254",extras:"100% free — no cost ever. Over 60 years serving Arizona's special needs community. 400+ campers per season.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:true,inclusive:true,registrationOpen:true,reviews:[]},
+  {id:57,name:"Tempe Camp Challenge",org:"City of Tempe Adaptive Recreation",type:"Outdoor",ages:"5-21",cost:"DDD funded or private pay",costNum:0,dates:"June 9 – July 3, 2025",startDate:"2025-06-09",endDate:"2025-07-03",address:"1600 E Watson Dr, Tempe, AZ 85283",lat:33.3800,lng:-111.9200,desc:"Day camp specifically for youth and young adults with intellectual and developmental disabilities. Arts & crafts, games, swimming, music, field trips, and bowling in a fully supported environment.",schedule:"Mon–Thu, 8am–1pm",web:"https://tempe.gov/adaptive-recreation",phone:"(480) 350-5200",extras:"Accepts DDD funding. 1:4 staff ratio. Contact adaptiverec@tempe.gov.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,inclusive:true,registrationOpen:true,reviews:[]},
+  {id:58,name:"Arizona Science Center CAMP INNOVATION",org:"Arizona Science Center + SARRC",type:"STEM",ages:"5-14",cost:"$250/wk",costNum:250,dates:"June 2 – Aug 8",startDate:"2025-06-02",endDate:"2025-08-08",address:"600 E Washington St, Phoenix, AZ 85004",lat:33.4484,lng:-112.0669,desc:"SARRC-partnered STEM camp with trained inclusive practices for all campers including those with autism. Staff receive professional autism inclusion training from the Southwest Autism Research & Resource Center.",schedule:"Mon–Fri, 9am–3pm",web:"https://azscience.org/events-programs/camp-innovation",phone:"(602) 716-2000",extras:"SARRC-trained staff. One of the few STEM camps in Phoenix with formal autism inclusion certification.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:true,inclusive:true,registrationOpen:true,reviews:[]},
+  {id:59,name:"Scottsdale Adaptive Recreation Camp",org:"City of Scottsdale Adaptive Recreation",type:"Sports",ages:"12-22",cost:"See website",costNum:0,dates:"June – July 2025",startDate:"2025-06-01",endDate:"2025-07-31",address:"Scottsdale, AZ",lat:33.4942,lng:-111.9261,desc:"Population-specific programs for teenagers and young adults with disabilities. Fitness, cooking, social skill development, community excursions, and inclusion services within mainstream Scottsdale Parks programs.",schedule:"Mon–Fri, varies by program",web:"https://scottsdaleaz.gov/adaptive-recreation",extras:"Accommodation requests available for mainstream programs too. Contact Adaptive Recreation Center.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,inclusive:true,registrationOpen:true,reviews:[]},
+  // === OVERNIGHT ===
+  {id:60,name:"St. Joseph's Youth Camp",org:"St. Joseph's Youth Camp (nonprofit)",type:"Outdoor",ages:"6-17",cost:"$800-$950/wk",costNum:875,dates:"June 4 – July 15",startDate:"2025-06-04",endDate:"2025-07-15",address:"4860 Mormon Lake Rd, Mormon Lake, AZ 86038",lat:34.9700,lng:-111.5500,desc:"One of Arizona's most beloved traditional overnight camps, nestled in the pines near Flagstaff. Horseback riding, kayaking, archery, high ropes courses, hiking, campfires, and stargazing. Non-denominational, nonprofit, operating since 1949.",schedule:"7-day / 6-night sessions. Bus transportation from Phoenix available.",web:"https://sjycaz.com",phone:"(480) 449-0848",extras:"Scholarships available. ESA-friendly. 5 sessions June–July. Bus from Phoenix area included.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:true,registrationOpen:true,reviews:[]},
+  {id:61,name:"Salvation Army Camp Ponderosa Ranch",org:"The Salvation Army",type:"Outdoor",ages:"7-16",cost:"Subsidized / scholarship-based",costNum:0,dates:"June – July 2025",startDate:"2025-06-01",endDate:"2025-07-31",address:"Heber, AZ (White Mountains)",lat:34.4000,lng:-110.6500,desc:"Week-long overnight camp in the White Mountains of Arizona. Adventure, scouting, arts & crafts, music, and sports in a beautiful mountain setting. Financial assistance available for families who need it.",schedule:"Week-long sessions, overnight",web:"https://salvationarmyphoenix.org/summer-camp",phone:"(602) 267-4100",extras:"Financial assistance and scholarships available. Contact local Salvation Army for pricing.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  // === EAST VALLEY SPECIFIC ===
+  {id:62,name:"Arizona Museum of Natural History Dino Camp",org:"Arizona Museum of Natural History",type:"STEM",ages:"4-12",cost:"$325/wk",costNum:325,dates:"June – July 2025",startDate:"2025-06-01",endDate:"2025-07-31",address:"53 N Macdonald St, Mesa, AZ 85201",lat:33.4175,lng:-111.8318,desc:"Prehistoric-themed STEM camp at Mesa's natural history museum. Dinosaur digs, fossil identification, paleontology experiments, and hands-on science. Perfect for young dinosaur enthusiasts.",schedule:"Mon–Thu, 8am–1pm. Fridays 8am–4pm.",web:"https://azmnh.org",extras:"10% sibling discount. Early bird discount available through March 31.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:63,name:"UUCP Kids Camp",org:"Unitarian Universalist Congregation of Phoenix",type:"Arts",ages:"3-13",cost:"Free (extended care 8am–6pm)",costNum:0,dates:"June 3 – June 28",startDate:"2025-06-03",endDate:"2025-06-28",address:"4027 E Lincoln Dr, Paradise Valley, AZ 85253",lat:33.5378,lng:-111.9748,desc:"Celebrating 50 years! Four weeks of creative, inclusive camp with robots, puppetry, sports, circus arts, and more. Welcoming to all families. Free extended care from 8am–6pm included.",schedule:"Mon–Fri, 9am–1pm. Extended care 8am–6pm free.",web:"https://phoenixuu.org/ministry/children/kids-camp",extras:"Free extended hours 8am–6pm. One of the best-value and most inclusive camps in the Valley.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,inclusive:true,registrationOpen:true,reviews:[]},
+  {id:64,name:"ISA Trailblazers Camp",org:"International School of Arizona",type:"Academic",ages:"4-14",cost:"See website",costNum:0,dates:"June – July 2025",startDate:"2025-06-01",endDate:"2025-07-31",address:"10810 N 90th St, Scottsdale, AZ 85260",lat:33.6500,lng:-111.8700,desc:"Hands-on exploration with weekly themes, STEM challenges, outdoor play, arts, and specialty camps. Led by educators on a beautiful campus. Non-immersion program — all activities in English.",schedule:"Mon–Fri, full day",web:"https://isaz.org/camppathfinders",extras:"Taught by certified educators. Beautiful Scottsdale campus.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+
+  // === FALL BREAK ADDITIONS (Phoenix & Scottsdale) ===
+  // Sourced from the Raising Arizona Kids 2026 fall break roundup (updated Aug 26, 2026).
+  // Map pins for these are approximate — verify the address with the camp before you drive.
+  {id:65,name:"Creative Color Fall Break Art Camp",org:"Creative Color Art Studios",type:"Arts",ages:"6-13",cost:"See website",costNum:0,summerCamp:false,dates:"Oct 13 – 16",startDate:"2026-10-13",endDate:"2026-10-16",address:"Scottsdale, AZ",lat:33.5900,lng:-111.9250,desc:"Fine art studio camp where kids develop their own creative process using graphite, watercolour, acrylic on canvas, mixed media and sculpture.",schedule:"Mon–Thu, 9am–3pm. Extended hours available.",web:"https://creativecolorart.com/school-holiday-art-breaks",extras:"Lines up with the Scottsdale Unified fall break week.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:true,fallWeeks:["w3"],fallDates:"Oct 13 – 16",fallConfirmed:true,fallStart:"2026-10-13",fallEnd:"2026-10-16",winterBreak:false,singleDay:false,featured:true,registrationOpen:true,reviews:[]},
+  {id:66,name:"Seth Korey Fall Break Tennis Camp",org:"Seth Korey Tennis Academy",type:"Sports",ages:"5-16",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"7421 N Scottsdale Rd, Scottsdale, AZ 85253",lat:33.5390,lng:-111.9250,desc:"Tennis camp built specifically around the fall break week, with coaching for beginners through tournament players.",schedule:"See website for daily times",web:"https://www.sethkoreytennis.com/fall-break-camp",extras:"Runs a dedicated fall break page — check it for this year's exact dates and rates.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:67,name:"Rachel's Young at Art Break Camp",org:"Rachel's Young at Art",type:"Arts",ages:"5-14",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"7366 E Shea Blvd #112, Scottsdale, AZ 85260",lat:33.5820,lng:-111.9230,desc:"Small-group art studio running camps on school break weeks. Drawing, painting, clay and mixed media projects.",schedule:"See website for daily times",web:"https://rachelsyoungatart.com/camps",phone:"(480) 621-6155",extras:"Small class sizes — call ahead, these fill quickly.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:68,name:"Scottsdale Gymnastics School Break Camp",org:"Scottsdale Gymnastics",type:"Sports",ages:"4-12",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"8662 E Shea Blvd, Scottsdale, AZ 85260",lat:33.5820,lng:-111.8930,desc:"Gymnastics, trampoline, obstacle courses and open gym time on days when school is out.",schedule:"See website for daily times",web:"https://scottsdalegymnastics.com/school-camp",phone:"(480) 951-0496",extras:"Dedicated school-break camp page. Single days often available.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  {id:69,name:"Bach to Rock Break Camp",org:"Bach to Rock North Scottsdale",type:"Music",ages:"6-17",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"7325 E Frank Lloyd Wright Blvd #104, Scottsdale, AZ 85260",lat:33.6180,lng:-111.9230,desc:"Music school break camps covering band, recording, songwriting and instrument lessons for all levels.",schedule:"See website for daily times",web:"https://www.bachtorock.com/northscottsdale",extras:"Good fit for kids who want something other than a sports camp.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:70,name:"Greasepaint Youtheatre Break Camp",org:"Greasepaint Youtheatre",type:"Arts",ages:"5-17",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"7020 E 2nd St, Scottsdale, AZ 85251",lat:33.4920,lng:-111.9270,desc:"Long-running Scottsdale youth theatre offering acting, improv and stagecraft on school break weeks.",schedule:"See website for daily times",web:"https://greasepaint.org",phone:"(480) 949-7529",extras:"One of the oldest youth theatre programs in the Valley.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:71,name:"Compassion Crew Youth Retreat",org:"Arizona Humane Society",type:"Life Skills & Character",ages:"9-12",cost:"See website",costNum:0,summerCamp:false,dates:"One-day retreat, fall 2026",startDate:"2026-10-05",endDate:"2026-10-16",address:"Arizona Humane Society, Phoenix, AZ",lat:33.5680,lng:-112.0900,desc:"A one-day retreat where kids build enrichment toys, learn about the animals in the shelter's care, and meet the Animal Teachers. Counts toward service hours.",schedule:"Single-day programme",web:"https://www.azhumane.org/youth-camps",extras:"Eligible for school service hours. Good option if you only need one day covered.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:false,reviews:[]},
+  {id:72,name:"Rising Sky Gymnastics Break Camp",org:"Rising Sky Gymnastics",type:"Sports",ages:"4-12",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"Ahwatukee and Northwest Phoenix locations",lat:33.3400,lng:-112.0300,desc:"Gymnastics-based break camps with tumbling, games and open gym across two Phoenix locations.",schedule:"See website for daily times",web:"https://risingskygymnastics.com/camp",phone:"(480) 687-1008",extras:"Two Phoenix locations — check which one is running your week.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+];
+
+const avg = r => r.length ? (r.reduce((s,x)=>s+x.rating,0)/r.length).toFixed(1) : null;
+const parseCost = (cost,f) => {
+  if(f==="Any Cost") return true;
+  const n=parseInt((cost||"").replace(/[^0-9]/g,""));
+  if(f==="Free") return n===0;
+  if(f==="Under $200/wk") return n<200;
+  if(f==="$200-$400/wk") return n>=200&&n<=400;
+  if(f==="$400-$600/wk") return n>400&&n<=600;
+  if(f==="$600+/wk") return n>600;
+  return true;
+};
+const ageMatch = (a,f) => {
+  if(f==="All Ages") return true;
+  const [fMin,fMax]=f.split("-").map(Number);
+  const [cMin,cMax]=(a||"").split("-").map(Number);
+  return cMin<=(fMax||fMin)&&(cMax||cMin)>=fMin;
+};
+const timeMatch = (c,f) => {
+  if(f==="Any Schedule") return true;
+  if(f==="Extended Care") return c.extCare;
+  if(f==="Before Care") return c.beforeCare;
+  if(f==="After Care") return c.afterCare;
+  if(f==="Single Day OK") return c.singleDay;
+  if(f==="Full Day (8h+)") return /7am|7:30|8am|full/i.test(c.schedule||"");
+  if(f==="Half Day") return /12pm|half|noon/i.test(c.schedule||"");
+  return true;
+};
+const seasonMatch = (c,season,fallWeek) => {
+  if(season==="Summer") return c.summerCamp!==false;
+  if(season==="Spring Break") return !!c.springBreak;
+  if(season==="Winter Break") return !!c.winterBreak;
+  if(season==="Fall Break"){
+    if(!c.fallBreak) return false;
+    if(fallWeek==="any") return true;
+    // Camps that haven't published dates yet stay visible in every week,
+    // flagged on the card, rather than silently disappearing.
+    if(!c.fallWeeks||c.fallWeeks.length===0) return true;
+    return c.fallWeeks.includes(fallWeek);
+  }
+  return true;
+};
+const distMiles = (lat1,lng1,lat2,lng2) => {
+  const R=3958.8,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+};
+
+const buildUrl = (params) => {
+  const base=window.location.href.split("?")[0];
+  const q=new URLSearchParams();
+  Object.entries(params).forEach(([k,v])=>{ if(v) q.set(k,v); });
+  const s=q.toString();
+  return s?`${base}?${s}`:base;
+};
+const getCampUrl = (id,season) => buildUrl({camp:id,season:season&&season!=="Summer"?season:null});
+const getHighlightedId = () => { try { return parseInt(new URLSearchParams(window.location.search).get("camp"))||null; } catch { return null; } };
+const getSeasonFromUrl = () => { try { const s=new URLSearchParams(window.location.search).get("season"); return SEASONS.includes(s)?s:"Summer"; } catch { return "Summer"; } };
+const getWeekFromUrl = () => { try { const w=new URLSearchParams(window.location.search).get("week"); return FALL_WEEKS.some(x=>x.key===w)?w:"any"; } catch { return "any"; } };
+
+const addUtm = (url,season) => {
+  if(!url) return url;
+  try {
+    const u = new URL(url);
+    u.searchParams.set("utm_source","campful");
+    u.searchParams.set("utm_medium","referral");
+    u.searchParams.set("utm_campaign",(SEASON_COPY[season]||SEASON_COPY.Summer).utm);
+    return u.toString();
+  } catch(e){ return url; }
+};
+
+// Fall break camps carry their own dates; everything else uses the summer run.
+const campDateRange = (camp,season) => {
+  if(season==="Fall Break"&&camp.fallStart) return [camp.fallStart,camp.fallEnd||camp.fallStart];
+  return [camp.startDate||"2025-06-02",camp.endDate||"2025-08-08"];
+};
+const canExportDates = (camp,season) => season!=="Fall Break"||!!camp.fallStart;
+
+const exportToICal = (camp,season) => {
+  const fmt = d => d.replace(/-/g,"");
+  const [s,e]=campDateRange(camp,season);
+  const details = encodeURIComponent(`${camp.desc||""}\nSchedule: ${camp.schedule||""}\nCost: ${camp.cost||""}\nWebsite: ${camp.web||""}`);
+  const location = encodeURIComponent(camp.address||"Phoenix, AZ");
+  const title = encodeURIComponent(camp.name);
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(s)}/${fmt(e)}&details=${details}&location=${location}`;
+  window.open(url, "_blank");
+};
+const exportAllToICal = (camps,season) => {
+  const fmt = d => d.replace(/-/g,"");
+  camps.filter(c=>canExportDates(c,season)).forEach((camp,i) => {
+    setTimeout(()=>{
+      const [s,e]=campDateRange(camp,season);
+      const title = encodeURIComponent(camp.name);
+      const location = encodeURIComponent(camp.address||"Phoenix, AZ");
+      const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(s)}/${fmt(e)}&location=${location}`;
+      window.open(url, "_blank");
+    }, i * 300);
+  });
+};
+
+const S = {
+  input: {width:"100%",border:`1.5px solid #E8D5A0`,borderRadius:10,padding:"9px 13px",fontSize:13,fontFamily:"'DM Sans',sans-serif",background:"white",color:"#2D1A08",boxSizing:"border-box",outline:"none"},
+  btn: (active,color=BLUE) => ({padding:"8px 16px",borderRadius:20,border:active?"none":`1.5px solid #E8D5A0`,fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",transition:"all 0.15s",background:active?color:"white",color:active?"white":"#92600A"}),
+  pill: (active,ts) => ({padding:"7px 16px",borderRadius:20,fontSize:12,fontWeight:700,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",transition:"all 0.2s",whiteSpace:"nowrap",
+    background:active?(ts?.dot||BLUE):"white",color:active?"white":"#92600A",
+    boxShadow:active?`0 3px 12px ${ts?.dot||BLUE}44`:"0 1px 3px rgba(0,0,0,0.06)",
+    border:active?"none":`1.5px solid #E8D5A0`,transform:active?"translateY(-1px)":"none"}),
+};
+
+const Stars = ({rating,interactive=false,onRate,size=18}) => {
+  const [hover,setHover]=useState(0);
+  return <span style={{display:"inline-flex",gap:1}}>
+    {[1,2,3,4,5].map(s=>(
+      <span key={s} onClick={()=>interactive&&onRate&&onRate(s)}
+        onMouseEnter={()=>interactive&&setHover(s)} onMouseLeave={()=>interactive&&setHover(0)}
+        style={{fontSize:size,cursor:interactive?"pointer":"default",color:(hover||rating)>=s?"#F59E0B":"#E5E7EB",lineHeight:1}}>★</span>
+    ))}
+  </span>;
+};
+
+const ReviewModal = ({camp,onClose,onSubmit}) => {
+  const [name,setName]=useState(""); const [rating,setRating]=useState(0);
+  const [text,setText]=useState(""); const [childAge,setChildAge]=useState(""); const [year,setYear]=useState("2026");
+  const submit=()=>{
+    if(!name.trim()||!rating||!text.trim()){alert("Add your name, a star rating and a few words about the camp to post your review.");return;}
+    onSubmit({name,rating,text,childAge,year,date:new Date().toLocaleDateString()}); onClose();
+  };
+  const lbl={display:"block",fontSize:11,fontWeight:700,color:"#92600A",marginBottom:5,letterSpacing:"0.04em",fontFamily:"'DM Sans',sans-serif"};
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(146,64,14,0.65)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:16,backdropFilter:"blur(6px)"}}>
+      <div style={{background:"white",borderRadius:20,padding:28,width:"100%",maxWidth:440,boxShadow:"0 30px 80px rgba(146,64,14,0.3)"}}>
+        <h3 style={{margin:"0 0 4px",fontSize:22,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Leave a Review</h3>
+        <p style={{margin:"0 0 20px",fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>{camp.name}</p>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          <div><label style={lbl}>YOUR NAME</label><input style={S.input} placeholder="e.g. Sarah M." value={name} onChange={e=>setName(e.target.value)}/></div>
+          <div><label style={lbl}>RATING</label><Stars rating={rating} interactive onRate={setRating} size={28}/>
+            {rating>0&&<p style={{margin:"4px 0 0",fontSize:12,color:BLUE,fontFamily:"'DM Sans',sans-serif"}}>{["","Poor","Fair","Good","Great","Excellent!"][rating]}</p>}
+          </div>
+          <div style={{display:"flex",gap:10}}>
+            <div style={{flex:1}}><label style={lbl}>CHILD'S AGE</label><input style={S.input} placeholder="e.g. 8" value={childAge} onChange={e=>setChildAge(e.target.value)}/></div>
+            <div style={{flex:1}}><label style={lbl}>YEAR</label>
+              <select style={S.input} value={year} onChange={e=>setYear(e.target.value)}>
+                {["2026","2025","2024","2023"].map(y=><option key={y}>{y}</option>)}</select></div>
+          </div>
+          <div><label style={lbl}>YOUR REVIEW</label><textarea style={{...S.input,height:90,resize:"none"}} placeholder="What did your child love? How were the staff?" value={text} onChange={e=>setText(e.target.value)}/></div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={onClose} style={{...S.btn(false),flex:1,padding:"11px 0",borderRadius:12}}>Cancel</button>
+            <button onClick={submit} style={{...S.btn(true),flex:1,padding:"11px 0",borderRadius:12}}>Post review</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AlertModal = ({camp,onClose}) => {
+  const [email,setEmail]=useState(""); const [sent,setSent]=useState(false);
+  const subject=encodeURIComponent(`Alert me when ${camp.name} opens registration`);
+  const body=encodeURIComponent(`Hi,\n\nPlease notify me when registration opens for:\n\n${camp.name}\n${camp.dates}\n${camp.address}\n\nMy email: ${email}\n\nThanks!`);
+  const mailto=camp.web?`mailto:info@${camp.web.replace(/https?:\/\//,"").split("/")[0]}?subject=${subject}&body=${body}`:null;
+  const handle=()=>{
+    if(!email.trim()||!email.includes("@")){alert("Enter an email address so the camp knows where to reach you.");return;}
+    if(mailto) window.open(mailto,"_blank"); setSent(true);
+  };
+  const lbl={display:"block",fontSize:11,fontWeight:700,color:"#92600A",marginBottom:5,letterSpacing:"0.04em",fontFamily:"'DM Sans',sans-serif"};
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(146,64,14,0.65)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:16,backdropFilter:"blur(6px)"}}>
+      <div style={{background:"white",borderRadius:20,padding:28,width:"100%",maxWidth:420,boxShadow:"0 30px 80px rgba(146,64,14,0.3)"}}>
+        {!sent?<>
+          <div style={{fontSize:36,marginBottom:8}}>🔔</div>
+          <h3 style={{margin:"0 0 4px",fontSize:20,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Registration Alert</h3>
+          <p style={{margin:"0 0 6px",fontSize:14,fontWeight:600,color:"#2D1A08",fontFamily:"'DM Sans',sans-serif"}}>{camp.name}</p>
+          <p style={{margin:"0 0 20px",fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>
+            {camp.registrationOpen?"Registration is open. Head to the camp's site to sign up.":"Registration isn't open yet. Send the camp a note and ask to be told when it is."}
+          </p>
+          {camp.registrationOpen?(
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {camp.web&&<a href={camp.web} target="_blank" rel="noopener noreferrer" style={{display:"block",padding:"12px 0",borderRadius:12,background:BLUE,color:"white",textAlign:"center",fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif",textDecoration:"none"}}>Go to registration</a>}
+              <button onClick={onClose} style={{...S.btn(false),width:"100%",padding:"11px 0",borderRadius:12}}>Close</button>
+            </div>
+          ):(
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              <div><label style={lbl}>YOUR EMAIL</label><input style={S.input} type="email" placeholder="you@email.com" value={email} onChange={e=>setEmail(e.target.value)}/></div>
+              <p style={{margin:0,fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>This opens your email app with the message already written.</p>
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={onClose} style={{...S.btn(false),flex:1,padding:"11px 0",borderRadius:12}}>Cancel</button>
+                <button onClick={handle} style={{...S.btn(true),flex:1,padding:"11px 0",borderRadius:12}}>Send request</button>
+              </div>
+            </div>
+          )}
+        </>:(
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:12}}>✅</div>
+            <h3 style={{margin:"0 0 8px",fontSize:20,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Request sent</h3>
+            <p style={{margin:"0 0 20px",fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>Your email app should have opened with the message ready to go.</p>
+            <button onClick={onClose} style={{...S.btn(true),width:"100%",padding:"12px 0",borderRadius:12,fontSize:13}}>Done</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const FavoritesModal = ({savedCamps,season,onToggleSave,onClose}) => {
+  const totalCost=savedCamps.reduce((s,c)=>s+(c.costNum||0),0);
+  const exportable=savedCamps.filter(c=>canExportDates(c,season));
+
+  const shareList=()=>{
+    if(!savedCamps.length) return;
+    const url=buildUrl({favorites:savedCamps.map(c=>c.id).join(","),season:season!=="Summer"?season:null});
+    if(navigator.share){
+      navigator.share({title:"My Campful list",text:"Camps I saved on Campful",url});
+    } else {
+      navigator.clipboard.writeText(url).then(()=>alert("Link copied.")).catch(()=>prompt("Copy this link:",url));
+    }
+  };
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(146,64,14,0.65)",display:"flex",alignItems:"flex-start",justifyContent:"center",zIndex:200,padding:16,overflowY:"auto",backdropFilter:"blur(6px)"}}>
+      <div style={{background:"white",borderRadius:20,width:"100%",maxWidth:600,boxShadow:"0 30px 80px rgba(146,64,14,0.3)",margin:"auto",overflow:"hidden"}}>
+        <div style={{background:"linear-gradient(135deg,#92400E,#F59E0B)",padding:"24px 28px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+            <div>
+              <h2 style={{margin:"0 0 4px",fontSize:24,fontWeight:900,fontFamily:"'Fraunces',serif",color:"white"}}>My Favorites</h2>
+              <p style={{margin:0,fontSize:13,color:"rgba(255,255,255,0.8)",fontFamily:"'DM Sans',sans-serif"}}>Camps you've saved</p>
+            </div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:10,padding:"6px 14px",cursor:"pointer",fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>Close</button>
+          </div>
+          {savedCamps.length>0&&(
+            <div style={{marginTop:16,display:"flex",gap:12,flexWrap:"wrap"}}>
+              {[["CAMPS SAVED",savedCamps.length],["EST. TOTAL","$"+totalCost.toLocaleString()]].map(([l,v])=>(
+                <div key={l} style={{background:"rgba(255,255,255,0.15)",borderRadius:10,padding:"8px 16px"}}>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.7)",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.05em"}}>{l}</div>
+                  <div style={{fontSize:22,fontWeight:900,color:"white",fontFamily:"'Fraunces',serif"}}>{v}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div style={{padding:28}}>
+          {savedCamps.length>0?(
+            <>
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:18}}>
+                {savedCamps.map(camp=>{
+                  const ts=TYPE_STYLE[camp.type]||{};
+                  const shown=season==="Fall Break"&&camp.fallDates?camp.fallDates:camp.dates;
+                  return (
+                    <div key={camp.id} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",background:SKY,borderRadius:12,border:"1.5px solid #E8D5A0"}}>
+                      <span style={{width:10,height:10,borderRadius:"50%",background:ts.dot||BLUE,flexShrink:0,display:"inline-block"}}/>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:13,fontWeight:700,color:"#2D1A08",fontFamily:"'DM Sans',sans-serif"}}>{camp.name}</div>
+                        <div style={{fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>{shown} · {camp.cost}</div>
+                      </div>
+                      {canExportDates(camp,season)&&<button onClick={()=>exportToICal(camp,season)} style={{...S.btn(false),fontSize:11,padding:"5px 10px",borderRadius:8,flexShrink:0}}>Add to calendar</button>}
+                      <button onClick={()=>onToggleSave(camp)} style={{fontSize:11,padding:"5px 10px",borderRadius:8,border:"none",background:"#FFE4E6",color:"#9F1239",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>Remove</button>
+                    </div>
+                  );
+                })}
+              </div>
+              <button onClick={shareList} style={{...S.btn(true),width:"100%",padding:"13px 0",borderRadius:12,fontSize:13,marginBottom:8}}>
+                Copy a link to this list
+              </button>
+              {exportable.length>0&&(
+                <button onClick={()=>exportAllToICal(savedCamps,season)} style={{...S.btn(false),width:"100%",padding:"13px 0",borderRadius:12,fontSize:13}}>
+                  Add {exportable.length} to Google Calendar
+                </button>
+              )}
+              {season==="Fall Break"&&exportable.length<savedCamps.length&&(
+                <p style={{margin:"8px 0 0",fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif",textAlign:"center"}}>
+                  {savedCamps.length-exportable.length} of your saved camps haven't posted fall dates yet, so they can't be added to a calendar.
+                </p>
+              )}
+            </>
+          ):(
+            <div style={{textAlign:"center",padding:24,background:SKY,borderRadius:14,border:"1.5px dashed #D4B896"}}>
+              <div style={{fontSize:36,marginBottom:8}}>🤍</div>
+              <p style={{margin:"0 0 4px",fontSize:15,fontWeight:700,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Nothing saved yet</p>
+              <p style={{margin:0,fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>Tap the heart on any camp to keep it here.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const RequestSpotModal = ({camp,season,onClose}) => {
+  const [name,setName]=useState("");
+  const [email,setEmail]=useState("");
+  const [phone,setPhone]=useState("");
+  const [childAge,setChildAge]=useState("");
+  const [weeks,setWeeks]=useState(season==="Fall Break"?"Fall break":"");
+  const [msg,setMsg]=useState("");
+  const [sent,setSent]=useState(false);
+
+  const campEmail = camp.web
+    ? `info@${camp.web.replace(/https?:\/\//,"").split("/")[0]}`
+    : null;
+
+  const handle = () => {
+    if(!name.trim()||!email.trim()||!email.includes("@")){
+      alert("Add your name and an email address so the camp can reply."); return;
+    }
+    const subject = encodeURIComponent(`Spot Request: ${camp.name} — via Campful`);
+    const body = encodeURIComponent(
+      `Hi ${camp.org||camp.name} team,\n\nA family found you on Campful (campfulphx.com) and would like to request a spot:\n\n` +
+      `Parent name: ${name}\n` +
+      `Email: ${email}\n` +
+      (phone?`Phone: ${phone}\n`:"") +
+      (childAge?`Child's age: ${childAge}\n`:"") +
+      (weeks?`Preferred weeks: ${weeks}\n`:"") +
+      (msg?`\nMessage: ${msg}\n`:"") +
+      `\nCamp: ${camp.name}\n${season==="Fall Break"?(camp.fallDates||camp.dates):camp.dates}\n\nThank you!`
+    );
+    if(campEmail){
+      window.open(`mailto:${campEmail}?subject=${subject}&body=${body}`,"_blank");
+    }
+    setSent(true);
+  };
+
+  const lbl={display:"block",fontSize:11,fontWeight:700,color:"#92600A",marginBottom:5,letterSpacing:"0.04em",fontFamily:"'DM Sans',sans-serif"};
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(146,64,14,0.65)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:16,backdropFilter:"blur(6px)"}}>
+      <div style={{background:"white",borderRadius:20,padding:28,width:"100%",maxWidth:440,boxShadow:"0 30px 80px rgba(146,64,14,0.3)"}}>
+        {!sent?<>
+          <h3 style={{margin:"0 0 4px",fontSize:20,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Request a Spot</h3>
+          <p style={{margin:"0 0 20px",fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>{camp.name} · {season==="Fall Break"?(camp.fallDates||camp.dates):camp.dates}</p>
+          <div style={{display:"flex",flexDirection:"column",gap:11}}>
+            <div style={{display:"flex",gap:10}}>
+              <div style={{flex:1}}><label style={lbl}>YOUR NAME *</label><input style={S.input} placeholder="Sarah M." value={name} onChange={e=>setName(e.target.value)}/></div>
+              <div style={{flex:1}}><label style={lbl}>CHILD'S AGE</label><input style={S.input} placeholder="e.g. 8" value={childAge} onChange={e=>setChildAge(e.target.value)}/></div>
+            </div>
+            <div><label style={lbl}>EMAIL *</label><input style={S.input} type="email" placeholder="you@email.com" value={email} onChange={e=>setEmail(e.target.value)}/></div>
+            <div><label style={lbl}>PHONE (optional)</label><input style={S.input} placeholder="(602) 555-0100" value={phone} onChange={e=>setPhone(e.target.value)}/></div>
+            <div><label style={lbl}>PREFERRED WEEKS</label><input style={S.input} placeholder="e.g. Oct 12–16" value={weeks} onChange={e=>setWeeks(e.target.value)}/></div>
+            <div><label style={lbl}>MESSAGE (optional)</label><textarea style={{...S.input,height:70,resize:"none"}} placeholder="Any questions or special requests…" value={msg} onChange={e=>setMsg(e.target.value)}/></div>
+            <p style={{margin:0,fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>This opens your email app with the message already written.</p>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={onClose} style={{...S.btn(false),flex:1,padding:"11px 0",borderRadius:12}}>Cancel</button>
+              <button onClick={handle} style={{...S.btn(true),flex:1,padding:"11px 0",borderRadius:12}}>Send request</button>
+            </div>
+          </div>
+        </>:(
+          <div style={{textAlign:"center",padding:"12px 0"}}>
+            <div style={{fontSize:48,marginBottom:12}}>✅</div>
+            <h3 style={{margin:"0 0 8px",fontSize:20,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Request sent</h3>
+            <p style={{margin:"0 0 6px",fontSize:14,color:"#2D1A08",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>{camp.name}</p>
+            <p style={{margin:"0 0 24px",fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>Your email app should have opened with the message ready to go.</p>
+            <button onClick={onClose} style={{...S.btn(true),width:"100%",padding:"12px 0",borderRadius:12,fontSize:13}}>Done</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const AddCampModal = ({onClose,onAdd}) => {
+  const [f,setF]=useState({name:"",org:"",type:"Sports",ages:"",cost:"",dates:"",startDate:"2026-06-01",endDate:"2026-08-07",address:"",desc:"",schedule:"",web:"",phone:"",extras:"",fallDates:"",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:false,winterBreak:false,singleDay:false});
+  const set=(k,v)=>setF(p=>({...p,[k]:v}));
+  const submit=()=>{
+    if(!f.name.trim()||!f.address.trim()||!f.desc.trim()){alert("A camp needs at least a name, an address and a short description before it can be added.");return;}
+    onAdd({...f,id:Date.now(),reviews:[],featured:false,registrationOpen:false,
+      fallWeeks:[],fallConfirmed:false,
+      fallDates:f.fallBreak?(f.fallDates||"Fall dates not posted yet"):"",
+      costNum:parseInt(f.cost.replace(/[^0-9]/g,""))||0,
+      lat:33.4484+Math.random()*0.3-0.15,lng:-112.0669+Math.random()*0.3-0.15});
+    onClose();
+  };
+  const lbl={display:"block",fontSize:11,fontWeight:700,color:"#92600A",marginBottom:5,letterSpacing:"0.04em",fontFamily:"'DM Sans',sans-serif"};
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(146,64,14,0.65)",display:"flex",alignItems:"flex-start",justifyContent:"center",zIndex:200,padding:16,overflowY:"auto",backdropFilter:"blur(6px)"}}>
+      <div style={{background:"white",borderRadius:20,padding:28,width:"100%",maxWidth:520,boxShadow:"0 30px 80px rgba(146,64,14,0.3)",margin:"auto"}}>
+        <h3 style={{margin:"0 0 4px",fontSize:22,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Add a Camp</h3>
+        <p style={{margin:"0 0 20px",fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>Know a camp that's missing? Add it for the community.</p>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          <div style={{display:"flex",gap:10}}>
+            <div style={{flex:2}}><label style={lbl}>CAMP NAME *</label><input style={S.input} placeholder="e.g. Desert Sun Art Camp" value={f.name} onChange={e=>set("name",e.target.value)}/></div>
+            <div style={{flex:1}}><label style={lbl}>TYPE</label><select style={S.input} value={f.type} onChange={e=>set("type",e.target.value)}>{TYPES.filter(t=>t!=="All").map(t=><option key={t}>{t}</option>)}</select></div>
+          </div>
+          <div><label style={lbl}>ORGANIZATION</label><input style={S.input} placeholder="e.g. Phoenix Parks & Rec" value={f.org} onChange={e=>set("org",e.target.value)}/></div>
+          <div style={{display:"flex",gap:10}}>
+            <div style={{flex:1}}><label style={lbl}>AGE RANGE</label><input style={S.input} placeholder="e.g. 6-12" value={f.ages} onChange={e=>set("ages",e.target.value)}/></div>
+            <div style={{flex:1}}><label style={lbl}>COST</label><input style={S.input} placeholder="e.g. $250/wk" value={f.cost} onChange={e=>set("cost",e.target.value)}/></div>
+          </div>
+          <div style={{display:"flex",gap:10}}>
+            <div style={{flex:1}}><label style={lbl}>START DATE</label><input style={S.input} type="date" value={f.startDate} onChange={e=>set("startDate",e.target.value)}/></div>
+            <div style={{flex:1}}><label style={lbl}>END DATE</label><input style={S.input} type="date" value={f.endDate} onChange={e=>set("endDate",e.target.value)}/></div>
+          </div>
+          <div><label style={lbl}>ADDRESS *</label><input style={S.input} placeholder="e.g. 600 E Washington St, Phoenix" value={f.address} onChange={e=>set("address",e.target.value)}/></div>
+          <div><label style={lbl}>HOURS / SCHEDULE</label><input style={S.input} placeholder="e.g. Mon–Fri, 9am–3pm" value={f.schedule} onChange={e=>set("schedule",e.target.value)}/></div>
+          <div><label style={lbl}>DESCRIPTION *</label><textarea style={{...S.input,height:80,resize:"none"}} placeholder="What makes this camp special?" value={f.desc} onChange={e=>set("desc",e.target.value)}/></div>
+          <div style={{display:"flex",gap:10}}>
+            <div style={{flex:1}}><label style={lbl}>WEBSITE</label><input style={S.input} placeholder="https://..." value={f.web} onChange={e=>set("web",e.target.value)}/></div>
+            <div style={{flex:1}}><label style={lbl}>PHONE</label><input style={S.input} placeholder="(602) 555-0100" value={f.phone} onChange={e=>set("phone",e.target.value)}/></div>
+          </div>
+          <div><label style={lbl}>EXTRAS / NOTES</label><input style={S.input} placeholder="Scholarships, sibling discount, lunch included..." value={f.extras} onChange={e=>set("extras",e.target.value)}/></div>
+          <div><label style={lbl}>OPTIONS</label>
+            <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+              {[["extCare","Extended Care"],["beforeCare","Before Care"],["afterCare","After Care"],["springBreak","Spring Break"],["fallBreak","Fall Break"],["winterBreak","Winter Break"],["singleDay","Single Day OK"]].map(([k,l])=>(
+                <label key={k} style={{display:"flex",alignItems:"center",gap:6,fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",color:"#2D1A08"}}>
+                  <input type="checkbox" checked={f[k]} onChange={e=>set(k,e.target.checked)} style={{width:16,height:16,accentColor:BLUE}}/>{l}
+                </label>
+              ))}
+            </div>
+          </div>
+          {f.fallBreak&&(
+            <div><label style={lbl}>FALL BREAK DATES</label><input style={S.input} placeholder="e.g. Oct 12–16 (leave blank if not announced)" value={f.fallDates} onChange={e=>set("fallDates",e.target.value)}/></div>
+          )}
+          <div style={{display:"flex",gap:8,marginTop:4}}>
+            <button onClick={onClose} style={{...S.btn(false),flex:1,padding:"11px 0",borderRadius:12}}>Cancel</button>
+            <button onClick={submit} style={{...S.btn(true),flex:1,padding:"11px 0",borderRadius:12}}>Add camp</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MapView = ({camps,season,onSelect}) => {
+  const ref=useRef(null); const mapRef=useRef(null); const markersRef=useRef([]);
+  useEffect(()=>{
+    if(!ref.current) return;
+    const init=()=>{
+      if(mapRef.current) mapRef.current.remove();
+      const map=window.L.map(ref.current).setView([33.4943,-112.0200],11);
+      window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(map);
+      mapRef.current=map;
+      markersRef.current.forEach(m=>m.remove()); markersRef.current=[];
+      camps.forEach(camp=>{
+        if(!camp.lat||!camp.lng) return;
+        const ts=TYPE_STYLE[camp.type]||{dot:BLUE};
+        const shown=season==="Fall Break"&&camp.fallDates?camp.fallDates:(camp.dates||"—");
+        const icon=window.L.divIcon({html:`<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;background:${ts.dot};border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25);transform:rotate(-45deg)"></div>`,iconSize:[30,30],iconAnchor:[15,30],className:""});
+        const m=window.L.marker([camp.lat,camp.lng],{icon}).addTo(map)
+          .bindPopup(`<div style="font-family:'DM Sans',sans-serif;min-width:180px"><b style="color:#2D1A08">${camp.name}</b><br/><span style="font-size:11px">${camp.type} · Ages ${camp.ages}</span><br/><span style="font-size:11px">${camp.cost||"—"} · ${shown}</span><br/><br/><button onclick="window._cs(${camp.id})" style="width:100%;padding:6px;background:${BLUE};color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">View details</button></div>`,{maxWidth:220});
+        markersRef.current.push(m);
+      });
+      window._cs=id=>onSelect(id);
+    };
+    if(!window.L){
+      const css=document.createElement("link"); css.rel="stylesheet"; css.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"; document.head.appendChild(css);
+      const js=document.createElement("script"); js.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"; js.onload=init; document.head.appendChild(js);
+    } else init();
+    return()=>{delete window._cs;};
+  },[camps,season]);
+  return (
+    <div style={{borderRadius:16,overflow:"hidden",border:`2px solid #E8D5A0`}}>
+      <div ref={ref} style={{height:500,width:"100%",background:SKY}}/>
+      <div style={{padding:"10px 14px",background:"white",borderTop:`1px solid #E8D5A0`,display:"flex",gap:12,flexWrap:"wrap"}}>
+        {Object.entries(TYPE_STYLE).map(([t,{dot}])=>(
+          <span key={t} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>
+            <span style={{width:9,height:9,borderRadius:"50%",background:dot,display:"inline-block"}}/>{t}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const CampCard = ({camp,season,highlighted,saved,comparing,onAddReview,onToggleSave,onShowAlert,onToggleCompare,animDelay=0}) => {
+  const [expanded,setExpanded]=useState(highlighted);
+  const [showReview,setShowReview]=useState(false);
+  const [showRequest,setShowRequest]=useState(false);
+  const [copied,setCopied]=useState(false);
+  const [reviews,setReviews]=useState(camp.reviews||[]);
+  const cardRef=useRef(null);
+  const rating=avg(reviews);
+  const ts=TYPE_STYLE[camp.type]||{bg:"#EFF8FF",fg:"#1A6FA8",dot:BLUE};
+  const isFall=season==="Fall Break";
+  const datesShown=isFall&&camp.fallDates?camp.fallDates:(camp.dates||"—");
+  useEffect(()=>{if(highlighted&&cardRef.current)cardRef.current.scrollIntoView({behavior:"smooth",block:"center"});},[highlighted]);
+  const addReview=r=>{setReviews(p=>[...p,r]); onAddReview(camp.id,r);};
+  const sharecamp=()=>{
+    const url=getCampUrl(camp.id,season);
+    if(navigator.share){
+      navigator.share({title:camp.name,text:"Check out "+camp.name+" on Campful",url});
+    } else {
+      navigator.clipboard.writeText(url)
+        .then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);})
+        .catch(()=>{prompt("Copy this link:",url);});
+    }
+  };
+  const badge=(bg,fg,txt)=><span style={{fontSize:11,fontWeight:600,padding:"3px 10px",borderRadius:20,background:bg,color:fg,fontFamily:"'DM Sans',sans-serif"}}>{txt}</span>;
+  return (
+    <>
+      <div ref={cardRef}
+        className={`camp-card${highlighted?" highlighted":""}`}
+        style={{animationDelay:`${animDelay}s`,boxShadow:highlighted?"0 0 0 3px rgba(217,119,6,0.2)":"0 2px 10px rgba(146,64,14,0.08)"}}>
+        <div style={{padding:22}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
+                <span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:ts.bg,color:ts.fg,fontFamily:"'DM Sans',sans-serif"}}>{camp.type}</span>
+                {camp.sponsored&&<span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"white",fontFamily:"'DM Sans',sans-serif",boxShadow:"0 2px 8px rgba(217,119,6,0.3)"}}>Featured</span>}
+                {isFall&&camp.fallBreak&&(camp.fallConfirmed
+                  ? badge("#FEF3C7","#92400E","🍂 "+camp.fallDates)
+                  : <span style={{fontSize:11,fontWeight:600,padding:"3px 10px",borderRadius:20,background:"white",color:"#92600A",border:"1.5px dashed #D4B896",fontFamily:"'DM Sans',sans-serif"}}>Fall dates not posted yet</span>)}
+                {camp.featured&&badge("#FFF3CD","#92400E","Popular")}
+                {camp.extCare&&badge(BLUE_LIGHT,BLUE_DARK,"Ext. care")}
+                {!isFall&&camp.springBreak&&badge("#E0F2FE","#0369A1","Spring break")}
+                {!isFall&&camp.fallBreak&&badge("#FEF3C7","#92400E","Fall break")}
+                {!isFall&&camp.winterBreak&&badge("#EDE9FE","#5B21B6","Winter break")}
+                {camp.singleDay&&badge("#F0FDF4","#15803D","Single day OK")}
+                {camp.inclusive&&badge("#F5F3FF","#5B21B6","Inclusive")}
+                {camp.lunch&&badge("#FFF7ED","#9A3412","Lunch")}
+                {camp.snacks&&badge("#FFF7ED","#9A3412","Snacks")}
+              </div>
+              <h3 style={{margin:0,fontSize:18,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#1A0D00",lineHeight:1.2,letterSpacing:"-0.2px"}}>{camp.name}</h3>
+              {camp.org&&<p style={{margin:"4px 0 0",fontSize:11,color:"#B07840",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.04em",textTransform:"uppercase"}}>{camp.org}</p>}
+            </div>
+            {rating&&<div style={{textAlign:"right",marginLeft:12,flexShrink:0}}>
+              <div style={{fontSize:24,fontWeight:900,color:"#F59E0B",fontFamily:"'Fraunces',serif",lineHeight:1}}>{rating}</div>
+              <div style={{fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>{reviews.length} review{reviews.length!==1?"s":""}</div>
+            </div>}
+          </div>
+          <p style={{margin:"0 0 14px",fontSize:13,color:"#4A3520",lineHeight:1.65,fontFamily:"'DM Sans',sans-serif"}}>{camp.desc}</p>
+          <div className="card-info-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
+            {[["👶",`Ages ${camp.ages||"?"}`],["💰",camp.cost||"See website"],["📅",datesShown],["📍",camp.address]].map(([icon,txt])=>(
+              <div key={icon} style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#92600A",fontFamily:"'DM Sans',sans-serif"}}>
+                <span style={{flexShrink:0,fontSize:14}}>{icon}</span>
+                <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={txt}>{txt}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+            <button onClick={()=>setExpanded(!expanded)} style={{...S.btn(false),flex:1,minWidth:80,padding:"9px 0",borderRadius:10,fontSize:12}}>
+              {expanded?"Hide details":"Details"}
+            </button>
+            <button onClick={()=>setShowReview(true)} style={{...S.btn(true),flex:1,minWidth:90,padding:"9px 0",borderRadius:10,fontSize:12}}>
+              Review
+            </button>
+            <button onClick={()=>setShowRequest(true)} style={{...S.btn(false),flex:1,minWidth:100,padding:"9px 0",borderRadius:10,fontSize:12,borderColor:"#D97706",color:"#92400E",fontWeight:700}}>
+              Request spot
+            </button>
+            <button onClick={()=>onShowAlert(camp)} style={{...S.btn(false),padding:"9px 10px",borderRadius:10,fontSize:13,flexShrink:0}} title="Registration alert">🔔</button>
+            <button
+              onClick={()=>onToggleSave(camp)}
+              className={`heart-btn${saved?" saved":""}`}
+              title={saved?"Remove from favorites":"Save to favorites"}>
+              {saved?"❤️":"🤍"}
+            </button>
+            <button onClick={()=>onToggleCompare(camp)} style={{padding:"9px 10px",borderRadius:10,border:`1.5px solid #E8D5A0`,fontSize:13,cursor:"pointer",background:comparing?BLUE_LIGHT:"white",flexShrink:0,transition:"all 0.15s",fontWeight:700,color:comparing?BLUE_DARK:"#92600A"}} title={comparing?"Remove from compare":"Compare this camp"}>
+              ⚖️
+            </button>
+            <button onClick={sharecamp} style={{...S.btn(false),padding:"9px 10px",borderRadius:10,fontSize:13,flexShrink:0}} title="Copy a link to this camp">
+              {copied?"✓":"🔗"}
+            </button>
+          </div>
+          {saved&&<p style={{margin:"8px 0 0",fontSize:11,color:"#E05A5A",fontFamily:"'DM Sans',sans-serif",fontWeight:700}}>Saved to favorites</p>}
+        </div>
+        {expanded&&(
+          <div style={{borderTop:`1.5px solid #E8D5A0`,padding:20,background:SKY}}>
+            <div style={{fontSize:13,color:"#4A3520",fontFamily:"'DM Sans',sans-serif",display:"flex",flexDirection:"column",gap:7,marginBottom:14}}>
+              {isFall&&camp.fallBreak&&!camp.fallConfirmed&&(
+                <p style={{margin:0,padding:"9px 12px",background:"white",borderRadius:10,border:"1.5px dashed #D4B896",color:"#92600A"}}>
+                  This camp runs a fall break programme but hasn't published its dates or rates yet. Call or check the site before you plan around it.
+                </p>
+              )}
+              {camp.schedule&&<p style={{margin:0}}><strong style={{color:"#2D1A08"}}>Schedule:</strong> {camp.schedule}</p>}
+              {camp.web&&<p style={{margin:0}}><strong style={{color:"#2D1A08"}}>Website:</strong> <a href={addUtm(camp.web,season)} target="_blank" rel="noopener noreferrer" style={{color:BLUE,textDecoration:"none",fontWeight:600}}>{camp.web}</a></p>}
+              {camp.phone&&<p style={{margin:0}}><strong style={{color:"#2D1A08"}}>Phone:</strong> {camp.phone}</p>}
+              {camp.extras&&<p style={{margin:0}}><strong style={{color:"#2D1A08"}}>Extras:</strong> {camp.extras}</p>}
+            </div>
+            <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+              {canExportDates(camp,season)&&<button onClick={()=>exportToICal(camp,season)} style={{...S.btn(false),fontSize:12,padding:"8px 14px",borderRadius:10}}>Add to Google Calendar</button>}
+              {camp.inclusive&&<span style={{fontSize:12,padding:"8px 14px",borderRadius:10,background:"#F5F3FF",color:"#5B21B6",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Inclusive / adaptive programme</span>}
+              <button onClick={()=>onShowAlert(camp)} style={{...S.btn(camp.registrationOpen,"#059669"),fontSize:12,padding:"8px 14px",borderRadius:10}}>
+                {camp.registrationOpen?"Go to registration":"Ask to be notified"}
+              </button>
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+              <h4 style={{margin:0,fontSize:15,fontWeight:700,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Parent Reviews</h4>
+              <button onClick={()=>setShowReview(true)} style={{...S.btn(true),fontSize:11,padding:"5px 12px",borderRadius:8}}>Add yours</button>
+            </div>
+            {reviews.length>0?(
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {reviews.map((r,i)=>(
+                  <div key={i} style={{background:"white",borderRadius:12,padding:14,border:`1.5px solid #E8D5A0`}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                      <span style={{fontWeight:700,fontSize:13,fontFamily:"'DM Sans',sans-serif",color:"#2D1A08"}}>{r.name}</span>
+                      <span style={{fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>{r.date||r.year}</span>
+                    </div>
+                    <Stars rating={r.rating} size={15}/>
+                    <p style={{margin:"7px 0 0",fontSize:13,color:"#4A3520",lineHeight:1.5,fontFamily:"'DM Sans',sans-serif"}}>{r.text}</p>
+                    {r.childAge&&<p style={{margin:"5px 0 0",fontSize:11,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>Child age: {r.childAge}</p>}
+                  </div>
+                ))}
+              </div>
+            ):(
+              <div style={{textAlign:"center",padding:16,background:"white",borderRadius:12,border:`1.5px dashed #D4B896`}}>
+                <p style={{margin:0,fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>No reviews yet. If your child has been, you'd be the first.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {showReview&&<ReviewModal camp={camp} onClose={()=>setShowReview(false)} onSubmit={addReview}/>}
+      {showRequest&&<RequestSpotModal camp={camp} season={season} onClose={()=>setShowRequest(false)}/>}
+    </>
+  );
+};
+
+const CompareModal = ({camps,allCamps,season,onToggle,onClose}) => {
+  const ROWS = [
+    ["Type",        c=>c.type],
+    ["Ages",        c=>c.ages?`Ages ${c.ages}`:"—"],
+    ["Cost",        c=>c.cost||"See website"],
+    ["Schedule",    c=>c.schedule||"—"],
+    ["Dates",       c=>(season==="Fall Break"&&c.fallDates?c.fallDates:c.dates)||"—"],
+    ["Location",    c=>c.address||"—"],
+    ["Ext. Care",   c=>c.extCare?"Yes":"No"],
+    ["Before Care", c=>c.beforeCare?"Yes":"No"],
+    ["After Care",  c=>c.afterCare?"Yes":"No"],
+    ["Spring Break",c=>c.springBreak?"Yes":"No"],
+    ["Fall Break",  c=>c.fallBreak?(c.fallConfirmed?c.fallDates:"Yes — dates TBA"):"No"],
+    ["Winter Break",c=>c.winterBreak?"Yes":"No"],
+    ["Single Day",  c=>c.singleDay?"Yes":"No"],
+    ["Rating",      c=>{const r=c.reviews?.length?(c.reviews.reduce((s,x)=>s+x.rating,0)/c.reviews.length).toFixed(1):null; return r?`${r} (${c.reviews.length} reviews)`:"No reviews yet";}],
+    ["Website",     c=>c.web?<a href={addUtm(c.web,season)} target="_blank" rel="noopener noreferrer" style={{color:BLUE,fontWeight:600,fontSize:12}}>Visit site</a>:"—"],
+  ];
+  const [search,setSearch]=useState("");
+  const suggestions=allCamps.filter(c=>!camps.find(x=>x.id===c.id)&&(c.name.toLowerCase().includes(search.toLowerCase())||c.type.toLowerCase().includes(search.toLowerCase()))).slice(0,5);
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(92,40,8,0.65)",display:"flex",alignItems:"flex-start",justifyContent:"center",zIndex:200,padding:16,overflowY:"auto",backdropFilter:"blur(6px)"}}>
+      <div style={{background:"white",borderRadius:20,width:"100%",maxWidth:860,boxShadow:"0 30px 80px rgba(92,40,8,0.25)",margin:"auto",overflow:"hidden"}}>
+        <div style={{background:`linear-gradient(135deg,#92400E,#F59E0B)`,padding:"20px 24px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <h2 style={{margin:0,fontSize:22,fontWeight:900,fontFamily:"'Fraunces',serif",color:"white"}}>Compare Camps</h2>
+            <p style={{margin:"3px 0 0",fontSize:12,color:"rgba(255,255,255,0.8)",fontFamily:"'DM Sans',sans-serif"}}>Up to 3 camps side by side</p>
+          </div>
+          <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:10,padding:"6px 14px",cursor:"pointer",fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>Close</button>
+        </div>
+        <div style={{padding:20}}>
+          {camps.length<3&&(
+            <div style={{marginBottom:16,position:"relative"}}>
+              <label style={{display:"block",fontSize:10,fontWeight:700,color:"#92600A",marginBottom:5,letterSpacing:"0.06em",fontFamily:"'DM Sans',sans-serif"}}>ADD A CAMP TO COMPARE</label>
+              <input style={{...S.input,maxWidth:360}} placeholder="Search by name or type…" value={search} onChange={e=>setSearch(e.target.value)}/>
+              {search&&suggestions.length>0&&(
+                <div style={{position:"absolute",top:"100%",left:0,right:0,maxWidth:360,background:"white",border:`1.5px solid #E8D5A0`,borderRadius:10,boxShadow:"0 8px 20px rgba(146,64,14,0.12)",zIndex:10,marginTop:4}}>
+                  {suggestions.map(c=>(
+                    <button key={c.id} onClick={()=>{onToggle(c);setSearch("");}} style={{display:"block",width:"100%",padding:"10px 14px",border:"none",background:"transparent",textAlign:"left",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",borderBottom:`1px solid #F5EFE0`}}>
+                      <span style={{fontWeight:700,fontSize:13,color:"#2D1A08"}}>{c.name}</span>
+                      <span style={{fontSize:11,color:"#92600A",marginLeft:8}}>{c.type} · {c.cost}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {camps.length===0?(
+            <div style={{textAlign:"center",padding:"40px 0"}}>
+              <p style={{fontFamily:"'Fraunces',serif",fontSize:16,fontWeight:700,color:"#2D1A08",margin:"0 0 6px"}}>Nothing to compare yet</p>
+              <p style={{fontSize:13,fontFamily:"'DM Sans',sans-serif",margin:0,color:"#92600A"}}>Search above, or tap ⚖️ on any camp card.</p>
+            </div>
+          ):(
+            <div style={{overflowX:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",minWidth:400}}>
+                <thead>
+                  <tr>
+                    <th style={{width:110,padding:"8px 10px",textAlign:"left",fontSize:11,fontWeight:700,color:"#92600A",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.05em",borderBottom:`2px solid #E8D5A0`}}></th>
+                    {camps.map(c=>{
+                      const ts=TYPE_STYLE[c.type]||{};
+                      return (
+                        <th key={c.id} style={{padding:"8px 10px",textAlign:"left",borderBottom:`2px solid #E8D5A0`,minWidth:180}}>
+                          <div style={{fontSize:13,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08",marginBottom:3}}>{c.name}</div>
+                          <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                            <span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:10,background:ts.bg,color:ts.fg,fontFamily:"'DM Sans',sans-serif"}}>{c.type}</span>
+                            <button onClick={()=>onToggle(c)} style={{fontSize:10,padding:"2px 8px",borderRadius:10,border:"none",background:"#FFE4E6",color:"#9F1239",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Remove</button>
+                          </div>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {ROWS.map(([label,fn],i)=>(
+                    <tr key={label} style={{background:i%2===0?"#FFFBF0":"white"}}>
+                      <td style={{padding:"9px 10px",fontSize:11,fontWeight:700,color:"#92600A",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.04em",verticalAlign:"top"}}>{label}</td>
+                      {camps.map(c=>(
+                        <td key={c.id} style={{padding:"9px 10px",fontSize:13,color:"#2D1A08",fontFamily:"'DM Sans',sans-serif",verticalAlign:"top",borderLeft:`1px solid #F5EFE0`}}>{fn(c)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AboutModal = ({campCount,fallCount,onClose}) => {
+  const faqs = [
+    ["Is Campful free to use?","Yes. Campful is a community tool built by Phoenix parents, for Phoenix parents. No ads, no paywalls."],
+    ["Why does fall break show different weeks?","Because districts don't agree. Phoenix Union is out Oct 5–9, Phoenix Elementary Oct 6–10, and Scottsdale Unified Oct 12–16. Pick your week at the top of the fall break view so you only see camps running when your kids are actually off."],
+    ["Some camps say 'fall dates not posted yet' — what does that mean?","That camp runs a fall break programme, but as of the last update it hadn't published this year's dates or prices. It's still worth calling. We'd rather show you the option with a caveat than hide it."],
+    ["How do I find camps near me?","Type your zip in the ZIP CODE box, hit Go, then choose a radius. The map view also shows exactly where each camp is."],
+    ["How do I save camps?","Tap the heart on any camp card. Open Favorites to see them all and copy a link to your list."],
+    ["Can I add a camp that's missing?","Yes. Hit 'Add a Camp' in the header. Your submission goes into the list for everyone."],
+    ["How do I export camps to my calendar?","Open a camp's Details and click 'Add to Google Calendar'. Camps without confirmed dates won't offer this."],
+    ["Are the reviews from real parents?","They're submitted by Campful users. We don't verify them, but they come from families in the Phoenix area."],
+    ["Who built Campful?","An Arizona parent who got tired of spending hours Googling camps. It's a labour of love for the Phoenix parent community."],
+    ["How can I help?","Add camps that are missing, review the ones your kids have been to, and pass the link to other Phoenix parents."],
+  ];
+  const [open,setOpen]=useState(null);
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(92,40,8,0.65)",display:"flex",alignItems:"flex-start",justifyContent:"center",zIndex:200,padding:16,overflowY:"auto",backdropFilter:"blur(6px)"}}>
+      <div style={{background:"white",borderRadius:20,width:"100%",maxWidth:620,boxShadow:"0 30px 80px rgba(92,40,8,0.25)",margin:"auto",overflow:"hidden"}}>
+        <div style={{background:`linear-gradient(135deg,#92400E,#F59E0B)`,padding:"24px 28px",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-40,right:-40,width:160,height:160,borderRadius:"50%",background:"rgba(255,255,255,0.06)"}}/>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",position:"relative"}}>
+            <div>
+              <h2 style={{margin:"0 0 6px",fontSize:28,fontWeight:900,fontFamily:"'Fraunces',serif",color:"white"}}>About Campful</h2>
+              <p style={{margin:0,fontSize:13,color:"rgba(255,255,255,0.85)",fontFamily:"'DM Sans',sans-serif",maxWidth:400,lineHeight:1.6}}>
+                A free community tool built by Phoenix parents to make finding a camp less of a slog.
+              </p>
+            </div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:10,padding:"6px 14px",cursor:"pointer",fontSize:13,fontFamily:"'DM Sans',sans-serif",flexShrink:0,marginLeft:12}}>Close</button>
+          </div>
+          <div style={{display:"flex",gap:12,marginTop:16,flexWrap:"wrap"}}>
+            {[[campCount+" camps listed"],[fallCount+" run fall break"],["Free, always"]].map(([l])=>(
+              <div key={l} style={{background:"rgba(255,255,255,0.15)",borderRadius:10,padding:"7px 14px"}}>
+                <span style={{fontSize:12,fontWeight:700,color:"white",fontFamily:"'DM Sans',sans-serif"}}>{l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{padding:24}}>
+          <h3 style={{margin:"0 0 14px",fontSize:17,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Common questions</h3>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {faqs.map(([q,a],i)=>(
+              <div key={i} style={{borderRadius:12,border:`1.5px solid ${open===i?"#E8D5A0":"#F0E8D8"}`,overflow:"hidden",transition:"all 0.15s"}}>
+                <button onClick={()=>setOpen(open===i?null:i)} style={{width:"100%",padding:"13px 16px",border:"none",background:open===i?"#FFFBF0":"white",textAlign:"left",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+                  <span style={{fontSize:13,fontWeight:700,color:"#2D1A08",fontFamily:"'DM Sans',sans-serif",lineHeight:1.4}}>{q}</span>
+                  <span style={{fontSize:14,color:"#D97706",flexShrink:0,transition:"transform 0.15s",transform:open===i?"rotate(180deg)":"none"}}>▾</span>
+                </button>
+                {open===i&&(
+                  <div style={{padding:"0 16px 14px",fontSize:13,color:"#4A3520",fontFamily:"'DM Sans',sans-serif",lineHeight:1.6,background:"#FFFBF0"}}>
+                    {a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:20,padding:16,background:"#FEF3C7",borderRadius:12,border:`1.5px solid #FDE68A`,textAlign:"center"}}>
+            <p style={{margin:"0 0 4px",fontSize:14,fontWeight:700,fontFamily:"'Fraunces',serif",color:"#92400E"}}>Know a camp that's missing?</p>
+            <p style={{margin:0,fontSize:12,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>Hit Add a Camp and help the next parent out.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const FeedbackModal = ({onClose}) => {
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(92,40,8,0.65)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:16,backdropFilter:"blur(6px)"}}>
+      <div style={{background:"white",borderRadius:20,width:"100%",maxWidth:480,boxShadow:"0 30px 80px rgba(92,40,8,0.25)",overflow:"hidden"}}>
+        <div style={{background:"linear-gradient(135deg,#92400E,#F59E0B)",padding:"20px 24px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <h2 style={{margin:0,fontSize:20,fontWeight:900,fontFamily:"'Fraunces',serif",color:"white"}}>Share Feedback</h2>
+            <p style={{margin:"3px 0 0",fontSize:12,color:"rgba(255,255,255,0.8)",fontFamily:"'DM Sans',sans-serif"}}>Tell us what's wrong or missing</p>
+          </div>
+          <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:10,padding:"6px 14px",cursor:"pointer",fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>Close</button>
+        </div>
+        <div style={{padding:24,textAlign:"center"}}>
+          <p style={{fontFamily:"'Fraunces',serif",fontSize:17,fontWeight:900,color:"#2D1A08",margin:"0 0 8px"}}>Wrong dates? Missing camp? Tell us.</p>
+          <p style={{fontSize:13,color:"#92600A",fontFamily:"'DM Sans',sans-serif",margin:"0 0 24px"}}>Takes under a minute, and it fixes the listing for every other parent too.</p>
+          <button onClick={()=>window.open("https://docs.google.com/forms/d/e/1FAIpQLScvBTZj4nPY31rRVEZZjFdhYDGmRtEhbesxwn4S9uDxlC4u7Q/viewform","_blank")} style={{padding:"12px 28px",borderRadius:10,border:"none",background:"#D97706",color:"white",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",marginBottom:12,width:"100%"}}>
+            Open the feedback form
+          </button>
+          <button onClick={onClose} style={{padding:"10px 28px",borderRadius:10,border:"1.5px solid #E8D5A0",background:"white",color:"#92600A",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",width:"100%"}}>
+            Maybe later
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default function Campful() {
+  const [camps,setCamps]=useState(CAMPS);
+  const [search,setSearch]=useState("");
+  const [typeFilter,setTypeFilter]=useState("All");
+  const [ageFilter,setAgeFilter]=useState("All Ages");
+  const [costFilter,setCostFilter]=useState("Any Cost");
+  const [timeFilter,setTimeFilter]=useState("Any Schedule");
+  const [foodFilter,setFoodFilter]=useState([]);
+  const [seasonFilter,setSeasonFilter]=useState(getSeasonFromUrl());
+  const [fallWeek,setFallWeek]=useState(getWeekFromUrl());
+  const [sortBy,setSortBy]=useState("featured");
+  const [view,setView]=useState("list");
+  const [showAdd,setShowAdd]=useState(false);
+  const [showFavorites,setShowFavorites]=useState(false);
+  const [showCompare,setShowCompare]=useState(false);
+  const [showAbout,setShowAbout]=useState(false);
+  const [showFeedback,setShowFeedback]=useState(false);
+  const [compareIds,setCompareIds]=useState(new Set());
+  const [alertCamp,setAlertCamp]=useState(null);
+  const [savedIds,setSavedIds]=useState(new Set());
+  const [highlighted,setHighlighted]=useState(getHighlightedId());
+  const [linkCopied,setLinkCopied]=useState(false);
+
+  useEffect(()=>{
+    const params=new URLSearchParams(window.location.search);
+    const favIds=params.get("favorites");
+    if(favIds){
+      setSavedIds(new Set(favIds.split(",").map(Number)));
+    }
+    if(favIds||params.get("camp")){
+      // Keep the season in the URL so a shared link still reads correctly on reload.
+      const keep=params.get("season");
+      window.history.replaceState({},"",keep?`${window.location.pathname}?season=${encodeURIComponent(keep)}`:window.location.pathname);
+    }
+  },[]);
+
+  const [zipCode,setZipCode]=useState("");
+  const [radius,setRadius]=useState("10");
+  const [zipCoords,setZipCoords]=useState(null);
+  const [zipLoading,setZipLoading]=useState(false);
+
+  const copy = SEASON_COPY[seasonFilter]||SEASON_COPY.Summer;
+  const isFall = seasonFilter==="Fall Break";
+  const fallCount = camps.filter(c=>c.fallBreak).length;
+  const fallConfirmedCount = camps.filter(c=>c.fallBreak&&c.fallConfirmed).length;
+
+  const filtered=camps.filter(c=>{
+    const q=search.toLowerCase();
+    return (!q||[c.name,c.desc,c.type,c.address,c.org].some(s=>(s||"").toLowerCase().includes(q)))
+      &&(typeFilter==="All"||(typeFilter==="Inclusive"?c.inclusive:c.type===typeFilter))
+      &&ageMatch(c.ages,ageFilter)&&parseCost(c.cost,costFilter)&&timeMatch(c,timeFilter)
+      &&(foodFilter.length===0||(foodFilter.includes("Lunch")?(c.lunch||false):true)&&(foodFilter.includes("Snacks")?(c.snacks||false):true))
+      &&(!zipCoords||!c.lat||distMiles(zipCoords.lat,zipCoords.lng,c.lat,c.lng)<=parseFloat(radius))
+      &&seasonMatch(c,seasonFilter,fallWeek);
+  }).sort((a,b)=>{
+    if(b.sponsored!==a.sponsored) return (b.sponsored?1:0)-(a.sponsored?1:0);
+    // In fall break view, camps with confirmed dates come first — they're the ones you can act on.
+    if(isFall&&(!!b.fallConfirmed)!==(!!a.fallConfirmed)) return (b.fallConfirmed?1:0)-(a.fallConfirmed?1:0);
+    if(sortBy==="featured") return (b.featured?1:0)-(a.featured?1:0);
+    if(sortBy==="rating"){const r=x=>x.reviews.length?x.reviews.reduce((s,rv)=>s+rv.rating,0)/x.reviews.length:0;return r(b)-r(a);}
+    if(sortBy==="cost") return (a.costNum||0)-(b.costNum||0);
+    return a.name.localeCompare(b.name);
+  });
+
+  const savedCamps=camps.filter(c=>savedIds.has(c.id));
+  const toggleSave=camp=>setSavedIds(prev=>{const n=new Set(prev);n.has(camp.id)?n.delete(camp.id):n.add(camp.id);return n;});
+  const toggleCompare=camp=>setCompareIds(prev=>{const n=new Set(prev);if(n.has(camp.id)){n.delete(camp.id);}else if(n.size<3){n.add(camp.id);}else{alert("You can compare up to 3 camps at a time. Remove one to add another.");}return n;});
+  const compareCamps=camps.filter(c=>compareIds.has(c.id));
+
+  const shareThisView=()=>{
+    const url=buildUrl({
+      season:seasonFilter!=="Summer"?seasonFilter:null,
+      week:isFall&&fallWeek!=="any"?fallWeek:null,
+    });
+    if(navigator.share){
+      navigator.share({title:"Campful",text:`${copy.foot} — filter by age, cost and week`,url}).catch(()=>{});
+    } else {
+      navigator.clipboard.writeText(url)
+        .then(()=>{setLinkCopied(true);setTimeout(()=>setLinkCopied(false),2200);})
+        .catch(()=>prompt("Copy this link:",url));
+    }
+  };
+
+  const lookupZip=async()=>{
+    if(!zipCode.trim()||zipCode.length<5){alert("Enter a 5-digit zip code.");return;}
+    setZipLoading(true);
+    try {
+      const res=await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${zipCode}&country=US&format=json&limit=1`);
+      const data=await res.json();
+      if(data.length>0) setZipCoords({lat:parseFloat(data[0].lat),lng:parseFloat(data[0].lon)});
+      else alert("We couldn't find that zip code. Check the digits and try again.");
+    } catch(e){alert("The zip code lookup didn't respond. Try again in a moment.");}
+    setZipLoading(false);
+  };
+
+  const handleAddReview=(id,r)=>setCamps(prev=>prev.map(c=>c.id===id?{...c,reviews:[...c.reviews,r]}:c));
+
+  return (
+    <div style={{minHeight:"100vh",background:SKY,fontFamily:"'DM Sans',sans-serif"}}>
+      {/* HEADER */}
+      <div style={{background:`linear-gradient(160deg,#92400E 0%,#D97706 55%,#F59E0B 100%)`,padding:"28px 16px 0",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:-60,right:-60,width:260,height:260,borderRadius:"50%",background:"rgba(255,255,255,0.05)"}}/>
+        <div style={{position:"absolute",top:20,right:80,width:120,height:120,borderRadius:"50%",background:"rgba(255,255,255,0.04)"}}/>
+        <div style={{position:"absolute",bottom:-80,left:40,width:200,height:200,borderRadius:"50%",background:"rgba(255,255,255,0.04)"}}/>
+        <div style={{maxWidth:980,margin:"0 auto",position:"relative"}}>
+          <div className="header-top-row" style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+            {/* LOGO */}
+            <div style={{display:"flex",alignItems:"center",gap:14}}>
+              <div style={{width:52,height:52,borderRadius:14,background:"rgba(255,255,255,0.18)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0,border:"1.5px solid rgba(255,255,255,0.3)",boxShadow:"0 4px 20px rgba(0,0,0,0.12)"}}>🌵</div>
+              <div>
+                <h1 style={{margin:0,fontSize:48,fontWeight:900,fontFamily:"'Fraunces',serif",color:"white",letterSpacing:"-2px",lineHeight:1}}>Campful</h1>
+                <p style={{margin:"5px 0 0",fontSize:13,color:"rgba(255,255,255,0.8)",fontFamily:"'DM Sans',sans-serif"}}>
+                  {copy.tag}
+                </p>
+              </div>
+            </div>
+            {/* HEADER BUTTONS */}
+            <div className="header-btns" style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{background:"rgba(255,255,255,0.15)",borderRadius:12,padding:"6px 12px"}}>
+                <span style={{fontSize:12,color:"rgba(255,255,255,0.9)",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>{camps.length} camps</span>
+              </div>
+              <button onClick={()=>setShowAbout(true)} className="header-action-btn" style={{padding:"9px 16px",borderRadius:11,border:"2px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.1)",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+                About & FAQ
+              </button>
+              <button onClick={()=>setShowFeedback(true)} className="header-action-btn" style={{padding:"9px 16px",borderRadius:11,border:"2px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.1)",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+                Feedback
+              </button>
+              {compareIds.size>0&&(
+                <button onClick={()=>setShowCompare(true)} className="header-action-btn" style={{padding:"9px 16px",borderRadius:11,border:"none",background:"white",color:BLUE_DARK,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+                  Compare ({compareIds.size})
+                </button>
+              )}
+              <button onClick={()=>setShowFavorites(true)} className="header-action-btn" style={{padding:"9px 16px",borderRadius:11,border:"2px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.1)",color:"white",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+                Favorites{savedIds.size>0?` (${savedIds.size})`:""}
+              </button>
+              <button onClick={()=>setShowAdd(true)} className="header-action-btn" style={{padding:"9px 16px",borderRadius:11,border:"none",background:"white",color:BLUE,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+                Add a Camp
+              </button>
+            </div>
+          </div>
+          {/* SEARCH BAR */}
+          <div style={{background:"rgba(255,255,255,0.12)",borderRadius:"14px 14px 0 0",padding:"14px 14px 18px",backdropFilter:"blur(10px)"}}>
+            <p style={{margin:"0 0 8px",fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.7)",letterSpacing:"0.08em",fontFamily:"'DM Sans',sans-serif"}}>SEARCH BY NAME, TYPE, LOCATION OR KEYWORD</p>
+            <div style={{display:"flex",gap:8}}>
+              <input style={{flex:1,border:"none",borderRadius:10,padding:"12px 16px",fontSize:13,outline:"none",background:"white",fontFamily:"'DM Sans',sans-serif",color:"#2D1A08",boxShadow:"0 2px 8px rgba(0,0,0,0.1)"}}
+                placeholder='e.g. "gymnastics" or "YMCA" or "Scottsdale" or "art"'
+                value={search} onChange={e=>setSearch(e.target.value)}/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{maxWidth:980,margin:"0 auto",padding:"16px"}}>
+        {/* SEASON SELECTOR */}
+        <div style={{marginBottom:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap",marginBottom:10}}>
+            <p style={{margin:0,fontSize:13,fontWeight:700,color:"#92600A",fontFamily:"'DM Sans',sans-serif"}}>I'm looking for...</p>
+            <button onClick={shareThisView} style={{...S.btn(false),padding:"7px 14px",borderRadius:20,fontSize:12}}>
+              {linkCopied?"Link copied":"Copy link to this view"}
+            </button>
+          </div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {[["Summer","Summer camps"],["Spring Break","Spring break"],["Fall Break","Fall break"],["Winter Break","Winter break"]].map(([key,label])=>(
+              <button key={key} onClick={()=>setSeasonFilter(key)} className="season-btn" style={{
+                padding:"11px 20px",borderRadius:24,border:"2px solid",cursor:"pointer",
+                fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif",
+                borderColor:seasonFilter===key?"#D97706":"#E8D5A0",
+                background:seasonFilter===key?"#D97706":"white",
+                color:seasonFilter===key?"white":"#92600A",
+                boxShadow:seasonFilter===key?"0 4px 14px rgba(217,119,6,0.35)":"none"
+              }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* FALL BREAK WEEK PICKER */}
+        {isFall&&(
+          <div style={{background:"white",borderRadius:14,padding:16,marginBottom:14,border:"1.5px solid #E8D5A0",borderLeft:"5px solid #D97706"}}>
+            <p style={{margin:"0 0 4px",fontSize:15,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Which week is your fall break?</p>
+            <p style={{margin:"0 0 12px",fontSize:13,color:"#92600A",fontFamily:"'DM Sans',sans-serif",lineHeight:1.55,maxWidth:620}}>
+              Districts break on different weeks, so pick yours and the list narrows to camps running then. Camps that haven't posted dates stay visible either way.
+            </p>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <button onClick={()=>setFallWeek("any")} style={S.btn(fallWeek==="any")}>Any week</button>
+              {FALL_WEEKS.map(w=>(
+                <button key={w.key} onClick={()=>setFallWeek(w.key)} style={{...S.btn(fallWeek===w.key),display:"flex",flexDirection:"column",alignItems:"flex-start",gap:1,padding:"7px 14px",textAlign:"left"}}>
+                  <span>{w.label}</span>
+                  <span style={{fontSize:10,fontWeight:500,opacity:0.8}}>{w.who}</span>
+                </button>
+              ))}
+            </div>
+            <p style={{margin:"12px 0 0",fontSize:12,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>
+              {fallConfirmedCount} of {fallCount} fall break camps have published exact dates so far. Always confirm with the camp before you pay.
+            </p>
+          </div>
+        )}
+
+        {/* TYPE PILLS */}
+        <div style={{overflowX:"auto",marginBottom:14,paddingBottom:4}}>
+          <div style={{display:"flex",gap:8}}>
+            {TYPES.map(t=>(
+              <button key={t} onClick={()=>setTypeFilter(t)} style={S.pill(typeFilter===t,TYPE_STYLE[t])}>
+                {t==="All"?"All camps":t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* FILTER PANEL */}
+        <div style={{background:"white",borderRadius:14,padding:14,marginBottom:14,border:`1.5px solid #E8D5A0`,boxShadow:"0 2px 8px rgba(146,64,14,0.06)"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:12}}>
+            {[["SEARCH","text",search,setSearch,"Search camps…"],["CHILD'S AGE","select",ageFilter,setAgeFilter,AGES],["WEEKLY COST","select",costFilter,setCostFilter,COSTS],["SCHEDULE / CARE","select",timeFilter,setTimeFilter,TIMES]].map(([lbl,type,val,set,opts])=>(
+              <div key={lbl}>
+                <label style={{display:"block",fontSize:10,fontWeight:700,color:"#92600A",marginBottom:5,letterSpacing:"0.06em",fontFamily:"'DM Sans',sans-serif"}}>{lbl}</label>
+                {type==="text"
+                  ?<input style={S.input} placeholder={opts} value={val} onChange={e=>set(e.target.value)}/>
+                  :<select style={S.input} value={val} onChange={e=>set(e.target.value)}>{opts.map(o=><option key={o}>{o}</option>)}</select>}
+              </div>
+            ))}
+            <div>
+              <label style={{display:"block",fontSize:10,fontWeight:700,color:"#92600A",marginBottom:5,letterSpacing:"0.06em",fontFamily:"'DM Sans',sans-serif"}}>ZIP CODE</label>
+              <div style={{display:"flex",gap:5}}>
+                <input style={{...S.input,flex:1}} placeholder="e.g. 85016" maxLength={5} value={zipCode}
+                  onChange={e=>setZipCode(e.target.value)} onKeyDown={e=>e.key==="Enter"&&lookupZip()}/>
+                <button onClick={zipCoords?()=>{setZipCoords(null);setZipCode("");}:lookupZip}
+                  style={{padding:"9px 10px",borderRadius:8,border:`1.5px solid #E8D5A0`,background:zipCoords?"#FFE4E6":"white",color:zipCoords?"#9F1239":BLUE,fontSize:12,cursor:"pointer",fontWeight:700,fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>
+                  {zipLoading?"…":zipCoords?"Clear":"Go"}
+                </button>
+              </div>
+              {zipCoords&&(
+                <>
+                  <div style={{display:"flex",gap:5,marginTop:5,alignItems:"center",flexWrap:"wrap"}}>
+                    <span style={{fontSize:10,color:"#92600A",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>WITHIN</span>
+                    {["5","10","15","25"].map(r=>(
+                      <button key={r} onClick={()=>setRadius(r)} style={{fontSize:10,padding:"3px 8px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,background:radius===r?BLUE:BLUE_LIGHT,color:radius===r?"white":BLUE}}>
+                        {r}mi
+                      </button>
+                    ))}
+                  </div>
+                  <p style={{margin:"4px 0 0",fontSize:10,color:BLUE,fontFamily:"'DM Sans',sans-serif",fontWeight:700}}>Showing camps within {radius} miles of {zipCode}</p>
+                </>
+              )}
+            </div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:4}}>
+            <span style={{fontSize:10,fontWeight:700,color:"#92600A",letterSpacing:"0.06em",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>FOOD</span>
+            {["Lunch","Snacks"].map(f=>{
+              const active=foodFilter.includes(f);
+              return <button key={f} onClick={()=>setFoodFilter(prev=>active?prev.filter(x=>x!==f):[...prev,f])}
+                style={{fontSize:12,fontWeight:600,padding:"5px 14px",borderRadius:20,border:active?"2px solid #9A3412":"2px solid #E5E7EB",
+                background:active?"#FFF7ED":"#fff",color:active?"#9A3412":"#6B7280",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",
+                display:"flex",alignItems:"center",gap:4}}>
+                {f}
+              </button>;
+            })}
+          </div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <span style={{fontSize:10,fontWeight:700,color:"#92600A",letterSpacing:"0.06em",fontFamily:"'DM Sans',sans-serif"}}>SORT:</span>
+              {["featured","rating","cost","name"].map(s=>(
+                <button key={s} onClick={()=>setSortBy(s)} style={S.btn(sortBy===s)}>
+                  {s[0].toUpperCase()+s.slice(1)}
+                </button>
+              ))}
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:13,color:"#A07040",fontWeight:500,fontFamily:"'DM Sans',sans-serif"}}>{filtered.length} camp{filtered.length!==1?"s":""}</span>
+              <div style={{display:"flex",border:`1.5px solid #E8D5A0`,borderRadius:10,overflow:"hidden"}}>
+                {[["list","List"],["map","Map"]].map(([v,label])=>(
+                  <button key={v} onClick={()=>setView(v)} style={{padding:"7px 14px",border:"none",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",background:view===v?BLUE:"white",color:view===v?"white":"#92600A",transition:"all 0.15s"}}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RESULTS */}
+        {view==="map"?(
+          <MapView camps={filtered} season={seasonFilter} onSelect={id=>{setView("list");setHighlighted(id);}}/>
+        ):filtered.length>0?(
+          <div className="camp-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:16}}>
+            {filtered.map((c,i)=>(
+              <CampCard key={c.id} camp={c} season={seasonFilter} highlighted={highlighted===c.id} saved={savedIds.has(c.id)} comparing={compareIds.has(c.id)} onAddReview={handleAddReview} onToggleSave={toggleSave} onShowAlert={setAlertCamp} onToggleCompare={toggleCompare} animDelay={Math.min(i*0.05,0.5)}/>
+            ))}
+          </div>
+        ):(
+          <div style={{textAlign:"center",padding:"60px 0",color:"#A07040"}}>
+            <p style={{fontSize:18,fontWeight:700,fontFamily:"'Fraunces',serif",color:"#2D1A08",margin:"0 0 6px"}}>No {copy.empty} match those filters</p>
+            <p style={{fontSize:13,margin:"0 0 18px",fontFamily:"'DM Sans',sans-serif"}}>Widen the age or cost range, or clear the zip code, to see more.</p>
+            <button onClick={()=>setShowAdd(true)} style={{...S.btn(true),padding:"11px 22px",borderRadius:12,fontSize:13}}>Add a camp</button>
+          </div>
+        )}
+
+        <div style={{textAlign:"center",padding:"28px 0 10px",fontSize:12,color:"#D4B896",fontFamily:"'DM Sans',sans-serif"}}>
+          Campful · {copy.foot} · By parents, for parents
+        </div>
+      </div>
+
+      {showFavorites&&<FavoritesModal savedCamps={savedCamps} season={seasonFilter} onToggleSave={toggleSave} onClose={()=>setShowFavorites(false)}/>}
+      {showAdd&&<AddCampModal onClose={()=>setShowAdd(false)} onAdd={c=>setCamps(prev=>[c,...prev])}/>}
+      {alertCamp&&<AlertModal camp={alertCamp} onClose={()=>setAlertCamp(null)}/>}
+      {showCompare&&<CompareModal camps={compareCamps} allCamps={camps} season={seasonFilter} onToggle={toggleCompare} onClose={()=>setShowCompare(false)}/>}
+      {showAbout&&<AboutModal campCount={camps.length} fallCount={fallCount} onClose={()=>setShowAbout(false)}/>}
+      {showFeedback&&<FeedbackModal onClose={()=>setShowFeedback(false)}/>}
+    </div>
+  );
+}
