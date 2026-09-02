@@ -96,16 +96,19 @@ const SEASONS = ["Summer","Spring Break","Fall Break","Winter Break"];
 // Fall break lands on different weeks depending on the district, so camps are
 // tagged by week rather than a single yes/no flag.
 const FALL_WEEKS = [
-  {key:"w1", label:"Sep 28 – Oct 2", who:"Phoenix Country Day (partial)"},
+  {key:"w1", label:"Sep 28 – Oct 2", who:"Phoenix Country Day"},
   {key:"w2", label:"Oct 5 – 9",      who:"Phoenix Union, Phoenix Elementary"},
-  {key:"w3", label:"Oct 12 – 16",    who:"Scottsdale Unified"},
+  {key:"w3", label:"Oct 12 – 16",    who:"Scottsdale Unified, Paradise Valley"},
 ];
 
+// One tagline for the whole year — the site covers every school break, not just summer.
+const TAGLINE = "School's out, sorted. By parents, for parents.";
+
 const SEASON_COPY = {
-  "Summer":       {tag:"Summer, sorted. By parents, for parents.",      foot:"Phoenix & Scottsdale summer camps",       utm:"phoenix-summer-camps",       empty:"summer camps"},
-  "Spring Break": {tag:"Spring break, sorted. By parents, for parents.",foot:"Phoenix & Scottsdale spring break camps", utm:"phoenix-spring-break-camps", empty:"spring break camps"},
-  "Fall Break":   {tag:"Fall break, sorted. By parents, for parents.",  foot:"Phoenix & Scottsdale fall break camps",   utm:"phoenix-fall-break-camps",   empty:"fall break camps"},
-  "Winter Break": {tag:"Winter break, sorted. By parents, for parents.",foot:"Phoenix & Scottsdale winter break camps", utm:"phoenix-winter-break-camps", empty:"winter break camps"},
+  "Summer":       {foot:"Phoenix & Scottsdale summer camps",       utm:"phoenix-summer-camps",       empty:"summer camps"},
+  "Spring Break": {foot:"Phoenix & Scottsdale spring break camps", utm:"phoenix-spring-break-camps", empty:"spring break camps"},
+  "Fall Break":   {foot:"Phoenix & Scottsdale fall break camps",   utm:"phoenix-fall-break-camps",   empty:"fall break camps"},
+  "Winter Break": {foot:"Phoenix & Scottsdale winter break camps", utm:"phoenix-winter-break-camps", empty:"winter break camps"},
 };
 
 const TYPE_STYLE = {
@@ -200,6 +203,20 @@ const CAMPS = [
   {id:70,name:"Greasepaint Youtheatre Break Camp",org:"Greasepaint Youtheatre",type:"Arts",ages:"5-17",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"7020 E 2nd St, Scottsdale, AZ 85251",lat:33.4920,lng:-111.9270,desc:"Long-running Scottsdale youth theatre offering acting, improv and stagecraft on school break weeks.",schedule:"See website for daily times",web:"https://greasepaint.org",phone:"(480) 949-7529",extras:"One of the oldest youth theatre programs in the Valley.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
   {id:71,name:"Compassion Crew Youth Retreat",org:"Arizona Humane Society",type:"Life Skills & Character",ages:"9-12",cost:"See website",costNum:0,summerCamp:false,dates:"One-day retreat, fall 2026",startDate:"2026-10-05",endDate:"2026-10-16",address:"Arizona Humane Society, Phoenix, AZ",lat:33.5680,lng:-112.0900,desc:"A one-day retreat where kids build enrichment toys, learn about the animals in the shelter's care, and meet the Animal Teachers. Counts toward service hours.",schedule:"Single-day programme",web:"https://www.azhumane.org/youth-camps",extras:"Eligible for school service hours. Good option if you only need one day covered.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:false,reviews:[]},
   {id:72,name:"Rising Sky Gymnastics Break Camp",org:"Rising Sky Gymnastics",type:"Sports",ages:"4-12",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"Ahwatukee and Northwest Phoenix locations",lat:33.3400,lng:-112.0300,desc:"Gymnastics-based break camps with tumbling, games and open gym across two Phoenix locations.",schedule:"See website for daily times",web:"https://risingskygymnastics.com/camp",phone:"(480) 687-1008",extras:"Two Phoenix locations — check which one is running your week.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  // === MORE FALL BREAK CAMPS (Phoenix metro) ===
+  {id:73,name:"Arizona Dynamics Break Camp",org:"Arizona Dynamics",type:"Sports",ages:"4-14",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"Chandler/Mesa and Queen Creek locations",lat:33.3200,lng:-111.8400,desc:"Gymnastics and tumbling break camps that run at every location whenever school is out.",schedule:"See website for daily times",web:"https://azdynamics.com/school-break-camps",extras:"Runs school break camps every fall, winter, spring and summer at all three gyms.",extCare:false,beforeCare:false,afterCare:false,springBreak:true,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:true,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  {id:74,name:"B.E.S.T. Sports Break Camp",org:"Beginners Edge Sports Training",type:"Sports",ages:"4-12",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"7432 E Tierra Buena Ln, Scottsdale, AZ 85260",lat:33.6120,lng:-111.9210,desc:"Multi-sport training camp built around fundamentals, games and confidence for younger kids.",schedule:"See website for daily times",web:"https://thebestinaz.com/camps-scottsdale-main",extras:"Focused on beginners rather than competitive athletes.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  {id:75,name:"SPF Parkour Fall Camp",org:"SPF Parkour Academy",type:"Sports",ages:"6-14",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"1830 E Baseline Rd Ste 108, Mesa, AZ 85204",lat:33.3780,lng:-111.7900,desc:"Parkour and freerunning camp with coached progressions, obstacle work and games.",schedule:"See website for daily times",web:"https://www.spfparkouracademy.com/fallcamp",phone:"(480) 248-9987",extras:"Has a dedicated fall camp page — check it for this year's dates.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  {id:76,name:"Spilled Batter Break Camp",org:"Spilled Batter Cooking Classes",type:"Life Skills & Character",ages:"6-14",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"5515 E Laurel Ln, Scottsdale, AZ 85254",lat:33.5860,lng:-111.9640,desc:"Hands-on cooking camp where kids plan, cook and eat a full menu each day.",schedule:"See website for daily times",web:"https://www.spilledbatter.com",phone:"(602) 448-3647",extras:"Small kitchen — classes cap quickly.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,lunch:true,reviews:[]},
+  {id:77,name:"EmpoweRanch Break Programme",org:"EmpoweRanch",type:"Outdoor",ages:"6-15",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"308 W Siesta Way, Phoenix, AZ 85041",lat:33.3760,lng:-112.0930,desc:"Horse and ranch programme pairing animal care with confidence and responsibility work.",schedule:"See website for daily times",web:"https://empoweranch.org/programs",phone:"(602) 935-1059",extras:"Good option for kids who don't take to gym or classroom camps.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:78,name:"Rising Youth Theatre Break Camp",org:"Rising Youth Theatre",type:"Arts",ages:"8-18",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"Phoenix Center for the Arts, 1202 N 3rd St, Phoenix, AZ 85004",lat:33.4620,lng:-112.0690,desc:"Youth-led theatre making, devising and storytelling with professional teaching artists.",schedule:"See website for daily times",web:"https://risingyouththeatre.org/camp",extras:"Strong fit for teens who want to write and devise, not just perform.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:79,name:"Rafa Nadal Academy Break Camp",org:"Rafa Nadal Tennis Academy Phoenix",type:"Sports",ages:"6-17",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"Phoenix, AZ",lat:33.5100,lng:-112.0300,desc:"Structured tennis coaching using the academy's methodology, grouped by level.",schedule:"See website for daily times",web:"https://rafanadalacademycampusa.com/camps-in-phoenix",extras:"Premium pricing — check rates before committing.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:80,name:"Gold Medal Gymnastics Break Camp",org:"Gold Medal Gymnastics",type:"Sports",ages:"4-13",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"Chandler and Tempe locations",lat:33.3400,lng:-111.8900,desc:"Gymnastics break camps with rotations across bars, beam, floor and trampoline.",schedule:"See website for daily times",web:"https://www.goldmedalgym.com",extras:"Two East Valley gyms — check which is running your week.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,reviews:[]},
+  {id:81,name:"East Valley Children's Theatre Camp",org:"East Valley Children's Theatre",type:"Arts",ages:"6-17",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"4501 E Main St, Mesa, AZ 85205",lat:33.4160,lng:-111.7660,desc:"Acting, musical theatre and audition technique taught by working theatre educators.",schedule:"See website for daily times",web:"https://evct.org/camps",phone:"(480) 756-3828",extras:"Long-running Mesa youth theatre programme.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:82,name:"City of Surprise Break Camp",org:"City of Surprise",type:"Outdoor",ages:"5-12",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"Sierra Montana Rec Center, 14861 N Spring Ln, Surprise, AZ 85374",lat:33.6290,lng:-112.3670,desc:"City-run break camp with games, crafts, sports and gym time. Usually the cheapest option in the West Valley.",schedule:"See website for daily times",web:"https://surpriseaz.gov/596/Break-Camps",phone:"(623) 222-2000",extras:"Resident rates. Dedicated break camps page.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:true,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:83,name:"City of Goodyear Break Camp",org:"City of Goodyear",type:"Outdoor",ages:"5-12",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"Goodyear Rec Center, 420 S Estrella Pkwy, Goodyear, AZ 85338",lat:33.4180,lng:-112.4130,desc:"City break camp with sports, crafts and supervised free play across the school break.",schedule:"See website for daily times",web:"https://www.goodyearaz.gov/government/departments/parks-recreation/recreation-programs/break-camps",phone:"(623) 882-7525",extras:"Resident rates. Dedicated break camps page.",extCare:true,beforeCare:true,afterCare:true,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:true,singleDay:false,featured:false,registrationOpen:true,reviews:[]},
+  {id:84,name:"Flour Power Cooking Break Camp",org:"Flour Power Cooking Studios",type:"Life Skills & Character",ages:"5-14",cost:"See website",costNum:0,summerCamp:false,dates:"Fall break week",startDate:"2026-10-05",endDate:"2026-10-16",address:"1639 S Stapley Dr Ste 103, Mesa, AZ 85204",lat:33.3930,lng:-111.8100,desc:"Cooking studio camp where kids work through a themed menu each day and eat what they make.",schedule:"See website for daily times",web:"https://flourpowerstudios.com/locations/mesa-gilbert",phone:"(480) 524-1944",extras:"Meals are part of the programme.",extCare:false,beforeCare:false,afterCare:false,springBreak:false,fallBreak:true,fallWeeks:[],fallDates:"Fall dates not posted yet",fallConfirmed:false,winterBreak:false,singleDay:true,featured:false,registrationOpen:true,lunch:true,reviews:[]},
+
 ];
 
 const avg = r => r.length ? (r.reduce((s,x)=>s+x.rating,0)/r.length).toFixed(1) : null;
@@ -233,16 +250,13 @@ const seasonMatch = (c,season,fallWeek) => {
   if(season==="Summer") return c.summerCamp!==false;
   if(season==="Spring Break") return !!c.springBreak;
   if(season==="Winter Break") return !!c.winterBreak;
-  if(season==="Fall Break"){
-    if(!c.fallBreak) return false;
-    if(fallWeek==="any") return true;
-    // Camps that haven't published dates yet stay visible in every week,
-    // flagged on the card, rather than silently disappearing.
-    if(!c.fallWeeks||c.fallWeeks.length===0) return true;
-    return c.fallWeeks.includes(fallWeek);
-  }
+  if(season==="Fall Break") return !!c.fallBreak;
   return true;
 };
+// A camp only counts for a chosen week if it has actually published dates covering it.
+const runsInWeek = (c,fallWeek) => fallWeek==="any"||(c.fallWeeks||[]).includes(fallWeek);
+const datesUnknown = c => !c.fallWeeks||c.fallWeeks.length===0;
+
 const distMiles = (lat1,lng1,lat2,lng2) => {
   const R=3958.8,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
   const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
@@ -316,7 +330,7 @@ const Stars = ({rating,interactive=false,onRate,size=18}) => {
     {[1,2,3,4,5].map(s=>(
       <span key={s} onClick={()=>interactive&&onRate&&onRate(s)}
         onMouseEnter={()=>interactive&&setHover(s)} onMouseLeave={()=>interactive&&setHover(0)}
-        style={{fontSize:size,cursor:interactive?"pointer":"default",color:(hover||rating)>=s?"#F59E0B":"#E5E7EB",lineHeight:1}}>★</span>
+        style={{fontSize:size,cursor:interactive?"pointer":"default",color:(hover||rating)>=s?"#F59E0B":"#E8D5A0",lineHeight:1}}>★</span>
     ))}
   </span>;
 };
@@ -696,8 +710,10 @@ const CampCard = ({camp,season,highlighted,saved,comparing,onAddReview,onToggleS
                 <span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:ts.bg,color:ts.fg,fontFamily:"'DM Sans',sans-serif"}}>{camp.type}</span>
                 {camp.sponsored&&<span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,background:"linear-gradient(135deg,#F59E0B,#D97706)",color:"white",fontFamily:"'DM Sans',sans-serif",boxShadow:"0 2px 8px rgba(217,119,6,0.3)"}}>Featured</span>}
                 {isFall&&camp.fallBreak&&(camp.fallConfirmed
-                  ? badge("#FEF3C7","#92400E","🍂 "+camp.fallDates)
-                  : <span style={{fontSize:11,fontWeight:600,padding:"3px 10px",borderRadius:20,background:"white",color:"#92600A",border:"1.5px dashed #D4B896",fontFamily:"'DM Sans',sans-serif"}}>Fall dates not posted yet</span>)}
+                  ? badge("#FEF3C7","#92400E","Confirmed · "+camp.fallDates)
+                  : (camp.fallWeeks&&camp.fallWeeks.length>0
+                    ? <span style={{fontSize:11,fontWeight:600,padding:"3px 10px",borderRadius:20,background:"white",color:"#92400E",border:"1.5px solid #D4B896",fontFamily:"'DM Sans',sans-serif"}}>Expected · {camp.fallDates}</span>
+                    : <span style={{fontSize:11,fontWeight:600,padding:"3px 10px",borderRadius:20,background:"white",color:"#92600A",border:"1.5px dashed #D4B896",fontFamily:"'DM Sans',sans-serif"}}>Dates not posted yet</span>))}
                 {camp.featured&&badge("#FFF3CD","#92400E","Popular")}
                 {camp.extCare&&badge(BLUE_LIGHT,BLUE_DARK,"Ext. care")}
                 {!isFall&&camp.springBreak&&badge("#E0F2FE","#0369A1","Spring break")}
@@ -754,7 +770,7 @@ const CampCard = ({camp,season,highlighted,saved,comparing,onAddReview,onToggleS
         {expanded&&(
           <div style={{borderTop:`1.5px solid #E8D5A0`,padding:20,background:SKY}}>
             <div style={{fontSize:13,color:"#4A3520",fontFamily:"'DM Sans',sans-serif",display:"flex",flexDirection:"column",gap:7,marginBottom:14}}>
-              {isFall&&camp.fallBreak&&!camp.fallConfirmed&&(
+              {isFall&&camp.fallBreak&&datesUnknown(camp)&&(
                 <p style={{margin:0,padding:"9px 12px",background:"white",borderRadius:10,border:"1.5px dashed #D4B896",color:"#92600A"}}>
                   This camp runs a fall break programme but hasn't published its dates or rates yet. Call or check the site before you plan around it.
                 </p>
@@ -815,7 +831,7 @@ const CompareModal = ({camps,allCamps,season,onToggle,onClose}) => {
     ["Before Care", c=>c.beforeCare?"Yes":"No"],
     ["After Care",  c=>c.afterCare?"Yes":"No"],
     ["Spring Break",c=>c.springBreak?"Yes":"No"],
-    ["Fall Break",  c=>c.fallBreak?(c.fallConfirmed?c.fallDates:"Yes — dates TBA"):"No"],
+    ["Fall Break",  c=>c.fallBreak?(c.fallConfirmed?c.fallDates:(c.fallWeeks&&c.fallWeeks.length?"Expected "+c.fallDates:"Yes — dates TBA")):"No"],
     ["Winter Break",c=>c.winterBreak?"Yes":"No"],
     ["Single Day",  c=>c.singleDay?"Yes":"No"],
     ["Rating",      c=>{const r=c.reviews?.length?(c.reviews.reduce((s,x)=>s+x.rating,0)/c.reviews.length).toFixed(1):null; return r?`${r} (${c.reviews.length} reviews)`:"No reviews yet";}],
@@ -897,8 +913,8 @@ const CompareModal = ({camps,allCamps,season,onToggle,onClose}) => {
 const AboutModal = ({campCount,fallCount,onClose}) => {
   const faqs = [
     ["Is Campful free to use?","Yes. Campful is a community tool built by Phoenix parents, for Phoenix parents. No ads, no paywalls."],
-    ["Why does fall break show different weeks?","Because districts don't agree. Phoenix Union is out Oct 5–9, Phoenix Elementary Oct 6–10, and Scottsdale Unified Oct 12–16. Pick your week at the top of the fall break view so you only see camps running when your kids are actually off."],
-    ["Some camps say 'fall dates not posted yet' — what does that mean?","That camp runs a fall break programme, but as of the last update it hadn't published this year's dates or prices. It's still worth calling. We'd rather show you the option with a caveat than hide it."],
+    ["Why does fall break show different weeks?","Because districts don't agree. Phoenix Union is out Oct 5–9, Phoenix Elementary Oct 6–10, and Scottsdale Unified and Paradise Valley Oct 12–16. Pick your week at the top of the fall break view so you only see camps running when your kids are actually off."],
+    ["Some camps say 'fall dates not posted yet' — what does that mean?","That camp runs a fall break programme, but as of the last update it hadn't published this year's dates or prices. Pick a week and those camps drop into a separate section underneath the confirmed ones, so they're still there to call without cluttering your results."],
     ["How do I find camps near me?","Type your zip in the ZIP CODE box, hit Go, then choose a radius. The map view also shows exactly where each camp is."],
     ["How do I save camps?","Tap the heart on any camp card. Open Favorites to see them all and copy a link to your list."],
     ["Can I add a camp that's missing?","Yes. Hit 'Add a Camp' in the header. Your submission goes into the list for everyone."],
@@ -1036,7 +1052,7 @@ export default function Campful() {
       &&ageMatch(c.ages,ageFilter)&&parseCost(c.cost,costFilter)&&timeMatch(c,timeFilter)
       &&(foodFilter.length===0||(foodFilter.includes("Lunch")?(c.lunch||false):true)&&(foodFilter.includes("Snacks")?(c.snacks||false):true))
       &&(!zipCoords||!c.lat||distMiles(zipCoords.lat,zipCoords.lng,c.lat,c.lng)<=parseFloat(radius))
-      &&seasonMatch(c,seasonFilter,fallWeek);
+      &&seasonMatch(c,seasonFilter);
   }).sort((a,b)=>{
     if(b.sponsored!==a.sponsored) return (b.sponsored?1:0)-(a.sponsored?1:0);
     // In fall break view, camps with confirmed dates come first — they're the ones you can act on.
@@ -1046,6 +1062,12 @@ export default function Campful() {
     if(sortBy==="cost") return (a.costNum||0)-(b.costNum||0);
     return a.name.localeCompare(b.name);
   });
+
+  // In fall break view a chosen week splits results: camps confirmed for that week,
+  // and camps that run fall break but haven't published dates.
+  const weekPicked = isFall&&fallWeek!=="any";
+  const primary = weekPicked?filtered.filter(c=>runsInWeek(c,fallWeek)):filtered;
+  const undated = weekPicked?filtered.filter(c=>!runsInWeek(c,fallWeek)&&datesUnknown(c)):[];
 
   const savedCamps=camps.filter(c=>savedIds.has(c.id));
   const toggleSave=camp=>setSavedIds(prev=>{const n=new Set(prev);n.has(camp.id)?n.delete(camp.id):n.add(camp.id);return n;});
@@ -1095,7 +1117,7 @@ export default function Campful() {
               <div>
                 <h1 style={{margin:0,fontSize:48,fontWeight:900,fontFamily:"'Fraunces',serif",color:"white",letterSpacing:"-2px",lineHeight:1}}>Campful</h1>
                 <p style={{margin:"5px 0 0",fontSize:13,color:"rgba(255,255,255,0.8)",fontFamily:"'DM Sans',sans-serif"}}>
-                  {copy.tag}
+                  {TAGLINE}
                 </p>
               </div>
             </div>
@@ -1177,7 +1199,7 @@ export default function Campful() {
               ))}
             </div>
             <p style={{margin:"12px 0 0",fontSize:12,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>
-              {fallConfirmedCount} of {fallCount} fall break camps have published exact dates so far. Always confirm with the camp before you pay.
+              {fallConfirmedCount} of {fallCount} fall break camps have published exact dates so far. Pick a week and you'll see those first, with the rest listed underneath.
             </p>
           </div>
         )}
@@ -1234,8 +1256,8 @@ export default function Campful() {
             {["Lunch","Snacks"].map(f=>{
               const active=foodFilter.includes(f);
               return <button key={f} onClick={()=>setFoodFilter(prev=>active?prev.filter(x=>x!==f):[...prev,f])}
-                style={{fontSize:12,fontWeight:600,padding:"5px 14px",borderRadius:20,border:active?"2px solid #9A3412":"2px solid #E5E7EB",
-                background:active?"#FFF7ED":"#fff",color:active?"#9A3412":"#6B7280",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",
+                style={{fontSize:12,fontWeight:600,padding:"5px 14px",borderRadius:20,border:active?"2px solid #9A3412":"2px solid #E8D5A0",
+                background:active?"#FFF7ED":"#fff",color:active?"#9A3412":"#A07040",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",
                 display:"flex",alignItems:"center",gap:4}}>
                 {f}
               </button>;
@@ -1265,19 +1287,44 @@ export default function Campful() {
 
         {/* RESULTS */}
         {view==="map"?(
-          <MapView camps={filtered} season={seasonFilter} onSelect={id=>{setView("list");setHighlighted(id);}}/>
-        ):filtered.length>0?(
-          <div className="camp-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:16}}>
-            {filtered.map((c,i)=>(
-              <CampCard key={c.id} camp={c} season={seasonFilter} highlighted={highlighted===c.id} saved={savedIds.has(c.id)} comparing={compareIds.has(c.id)} onAddReview={handleAddReview} onToggleSave={toggleSave} onShowAlert={setAlertCamp} onToggleCompare={toggleCompare} animDelay={Math.min(i*0.05,0.5)}/>
-            ))}
-          </div>
+          <MapView camps={weekPicked?primary:filtered} season={seasonFilter} onSelect={id=>{setView("list");setHighlighted(id);}}/>
         ):(
-          <div style={{textAlign:"center",padding:"60px 0",color:"#A07040"}}>
-            <p style={{fontSize:18,fontWeight:700,fontFamily:"'Fraunces',serif",color:"#2D1A08",margin:"0 0 6px"}}>No {copy.empty} match those filters</p>
-            <p style={{fontSize:13,margin:"0 0 18px",fontFamily:"'DM Sans',sans-serif"}}>Widen the age or cost range, or clear the zip code, to see more.</p>
-            <button onClick={()=>setShowAdd(true)} style={{...S.btn(true),padding:"11px 22px",borderRadius:12,fontSize:13}}>Add a camp</button>
-          </div>
+          <>
+            {primary.length>0?(
+              <div className="camp-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:16}}>
+                {primary.map((c,i)=>(
+                  <CampCard key={c.id} camp={c} season={seasonFilter} highlighted={highlighted===c.id} saved={savedIds.has(c.id)} comparing={compareIds.has(c.id)} onAddReview={handleAddReview} onToggleSave={toggleSave} onShowAlert={setAlertCamp} onToggleCompare={toggleCompare} animDelay={Math.min(i*0.05,0.5)}/>
+                ))}
+              </div>
+            ):(
+              <div style={{textAlign:"center",padding:"48px 0",color:"#A07040"}}>
+                <p style={{fontSize:18,fontWeight:700,fontFamily:"'Fraunces',serif",color:"#2D1A08",margin:"0 0 6px"}}>
+                  {weekPicked?"No camps have confirmed dates for that week yet":`No ${copy.empty} match those filters`}
+                </p>
+                <p style={{fontSize:13,margin:"0 0 18px",fontFamily:"'DM Sans',sans-serif"}}>
+                  {weekPicked?"The camps below run fall break but haven't posted dates. Worth a call.":"Widen the age or cost range, or clear the zip code, to see more."}
+                </p>
+                {!weekPicked&&<button onClick={()=>setShowAdd(true)} style={{...S.btn(true),padding:"11px 22px",borderRadius:12,fontSize:13}}>Add a camp</button>}
+              </div>
+            )}
+
+            {undated.length>0&&(
+              <div style={{marginTop:28}}>
+                <div style={{display:"flex",alignItems:"baseline",gap:10,flexWrap:"wrap",marginBottom:4,paddingTop:20,borderTop:"1.5px solid #E8D5A0"}}>
+                  <h3 style={{margin:0,fontSize:17,fontWeight:900,fontFamily:"'Fraunces',serif",color:"#2D1A08"}}>Dates not published yet</h3>
+                  <span style={{fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif"}}>{undated.length} camp{undated.length!==1?"s":""}</span>
+                </div>
+                <p style={{margin:"0 0 16px",fontSize:13,color:"#A07040",fontFamily:"'DM Sans',sans-serif",maxWidth:640,lineHeight:1.55}}>
+                  These run a fall break programme but hadn't posted this year's dates when the list was last checked, so we can't tell you whether they cover your week. Call before you plan around them.
+                </p>
+                <div className="camp-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:16,opacity:0.94}}>
+                  {undated.map((c,i)=>(
+                    <CampCard key={c.id} camp={c} season={seasonFilter} highlighted={highlighted===c.id} saved={savedIds.has(c.id)} comparing={compareIds.has(c.id)} onAddReview={handleAddReview} onToggleSave={toggleSave} onShowAlert={setAlertCamp} onToggleCompare={toggleCompare} animDelay={Math.min(i*0.04,0.4)}/>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         <div style={{textAlign:"center",padding:"28px 0 10px",fontSize:12,color:"#D4B896",fontFamily:"'DM Sans',sans-serif"}}>
